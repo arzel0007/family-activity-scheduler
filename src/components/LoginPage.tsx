@@ -1,27 +1,29 @@
 import { useState } from 'react'
 import { useAuth } from '../lib/auth'
+import { useToast } from '../lib/toast'
 
 export function LoginPage() {
   const { signIn, signUp } = useAuth()
+  const { addToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
     try {
       if (isSignUp) {
         await signUp(email, password)
+        addToast('Account created successfully', 'success')
       } else {
         await signIn(email, password)
+        addToast('Signed in successfully', 'success')
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed')
+      addToast(err.message || 'Authentication failed', 'error')
     } finally {
       setLoading(false)
     }
@@ -56,8 +58,6 @@ export function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-sunset-orange text-sm">{error}</p>}
-
           <button
             type="submit"
             disabled={loading}
@@ -73,7 +73,6 @@ export function LoginPage() {
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp)
-                setError('')
               }}
               className="text-sky-blue hover:underline ml-2 font-medium"
             >

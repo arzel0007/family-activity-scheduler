@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { generateICS, downloadICS } from '../lib/ics'
+import { useToast } from '../lib/toast'
 
 interface Kid {
   id: string
@@ -31,6 +32,7 @@ interface Activity {
 }
 
 export function ActivitiesList() {
+  const { addToast } = useToast()
   const [activities, setActivities] = useState<Activity[]>([])
   const [kids, setKids] = useState<Kid[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -96,6 +98,7 @@ export function ActivitiesList() {
           kidIds: selectedKids,
           tagIds: selectedTags,
         })
+        addToast('Activity updated', 'success')
       } else {
         await addDoc(collection(db, 'activities'), {
           userId: auth.currentUser.uid,
@@ -108,10 +111,12 @@ export function ActivitiesList() {
           notes: [],
           createdAt: new Date(),
         })
+        addToast('Activity created', 'success')
       }
 
       resetForm()
     } catch (err) {
+      addToast('Error saving activity', 'error')
       console.error('Error saving activity:', err)
     }
   }
@@ -125,8 +130,10 @@ export function ActivitiesList() {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: [...(activity.notes || []), { id: Date.now().toString(), content: newNote }],
       })
+      addToast('Note added', 'success')
       setNewNote('')
     } catch (err) {
+      addToast('Error adding note', 'error')
       console.error('Error adding note:', err)
     }
   }
@@ -139,7 +146,9 @@ export function ActivitiesList() {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: activity.notes.filter((n) => n.id !== noteId),
       })
+      addToast('Note deleted', 'success')
     } catch (err) {
+      addToast('Error deleting note', 'error')
       console.error('Error deleting note:', err)
     }
   }
@@ -147,7 +156,9 @@ export function ActivitiesList() {
   async function handleDelete(id: string) {
     try {
       await deleteDoc(doc(db, 'activities', id))
+      addToast('Activity deleted', 'success')
     } catch (err) {
+      addToast('Error deleting activity', 'error')
       console.error('Error deleting activity:', err)
     }
   }
@@ -172,6 +183,7 @@ export function ActivitiesList() {
     }))
     const ics = generateICS(exportActivities, kids)
     downloadICS(ics, `activities-${new Date().toISOString().split('T')[0]}.ics`)
+    addToast('Calendar exported', 'success')
   }
 
   function resetForm() {

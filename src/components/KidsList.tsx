@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { ShareKidModal } from './ShareKidModal'
+import { useToast } from '../lib/toast'
 
 interface Kid {
   id: string
@@ -10,6 +11,7 @@ interface Kid {
 }
 
 export function KidsList() {
+  const { addToast } = useToast()
   const [kids, setKids] = useState<Kid[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -43,6 +45,7 @@ export function KidsList() {
           name: formData.name,
           age: parseInt(formData.age) || null,
         })
+        addToast(`${formData.name} updated`, 'success')
       } else {
         await addDoc(collection(db, 'kids'), {
           userId: auth.currentUser.uid,
@@ -50,12 +53,14 @@ export function KidsList() {
           age: parseInt(formData.age) || null,
           createdAt: new Date(),
         })
+        addToast(`${formData.name} added`, 'success')
       }
 
       setFormData({ name: '', age: '' })
       setEditingId(null)
       setShowForm(false)
     } catch (err) {
+      addToast('Error saving kid', 'error')
       console.error('Error saving kid:', err)
     }
   }
@@ -63,7 +68,9 @@ export function KidsList() {
   async function handleDelete(id: string) {
     try {
       await deleteDoc(doc(db, 'kids', id))
+      addToast('Kid deleted', 'success')
     } catch (err) {
+      addToast('Error deleting kid', 'error')
       console.error('Error deleting kid:', err)
     }
   }
