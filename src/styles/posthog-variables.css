@@ -1,0 +1,30 @@
+/* PostHog Workshop design tokens — from personalDailyTracker/postHog/ */
+
+[data-theme='posthog'] {
+  --color-surface-white: #ffffff;
+  --color-canvas-sand: #eeefe9;
+  --color-pale-granite: #e5e7e0;
+  --color-ink-black: #000000;
+  --color-charcoal-black: #111827;
+  --color-graphite-grey: #374151;
+  --color-faded-grey: #4d4f46;
+  --color-ash-grey: #65675e;
+  --color-warm-gray-tint: #e1d7c2;
+  --color-sky-blue: #2f80fa;
+  --color-marigold-yellow: #f1a82c;
+  --color-sunset-orange: #eb9d2a;
+  --color-vivid-green: #6aa84f;
+  --gradient-dynamic: linear-gradient(
+    90deg,
+    rgb(1, 67, 203),
+    rgb(43, 111, 244) 24.04%,
+    rgb(210, 52, 1) 46.63%,
+    rgb(255, 101, 31) 65.87%,
+    rgb(251, 160, 0) 83.17%,
+    rgb(1, 67, 203)
+  );
+  --page-max-width: 958px;
+  --section-gap: 48px;
+  --element-gap: 8px;
+  --shadow-xl: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
+}

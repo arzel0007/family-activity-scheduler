@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap');
+@import './styles/posthog-variables.css';
 
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --color-surface-white: #ffffff;
@@ -17,33 +18,45 @@
   --color-sunset-orange: #eb9d2a;
   --color-vivid-green: #6aa84f;
 
-  --font-ibm-plex-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-ibm-plex-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
 
   --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
 
   --shadow-xl: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
 }
 
 @layer base {
-  body {
-    @apply font-sans text-charcoal-black bg-surface-white dark:bg-charcoal-black dark:text-surface-white;
-    font-family: var(--font-ibm-plex-sans);
-    letter-spacing: -0.025em;
+  html[data-theme='posthog'] {
+    color-scheme: light;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-bold text-charcoal-black dark:text-surface-white;
+  body {
+    @apply font-sans text-charcoal-black bg-canvas-sand;
+    font-family: var(--font-ibm-plex-sans);
+    letter-spacing: -0.025em;
+    line-height: 1.43;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold text-charcoal-black;
     letter-spacing: -0.025em;
   }
 
   h1 {
-    @apply text-4xl leading-tight;
+    @apply text-4xl leading-none;
   }
 
   h2 {
-    @apply text-2xl leading-snug;
+    @apply text-2xl leading-tight;
   }
 
   h3 {
@@ -51,7 +64,7 @@
   }
 
   p {
-    @apply text-base text-graphite-grey dark:text-gray-300 leading-relaxed;
+    @apply text-sm text-graphite-grey leading-normal;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -63,27 +76,64 @@
 }
 
 @layer components {
+  .posthog-brand-bar {
+    height: 3px;
+    background: var(--gradient-dynamic);
+  }
+
   .btn-primary {
-    @apply px-4 py-2 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow hover:opacity-90 transition-opacity dark:hover:opacity-80;
+    @apply px-4 py-2.5 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow;
+    @apply hover:bg-sunset-orange hover:border-sunset-orange transition-colors;
   }
 
   .btn-secondary {
-    @apply px-2 py-1 rounded font-medium text-charcoal-black dark:text-surface-white bg-transparent border border-graphite-grey dark:border-gray-600 hover:bg-canvas-sand dark:hover:bg-gray-800 transition-colors;
+    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent border border-graphite-grey;
+    @apply hover:bg-pale-granite transition-colors;
   }
 
   .btn-ghost {
-    @apply px-2 py-1 rounded font-medium text-charcoal-black dark:text-surface-white bg-transparent hover:bg-canvas-sand dark:hover:bg-gray-800 transition-colors;
+    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent;
+    @apply hover:bg-warm-gray-tint transition-colors;
   }
 
   .card {
-    @apply bg-surface-white dark:bg-gray-900 rounded border border-pale-granite dark:border-gray-700;
+    @apply bg-surface-white rounded border border-pale-granite;
+    box-shadow: none;
   }
 
   .input {
-    @apply w-full px-3 py-2 rounded border border-graphite-grey dark:border-gray-600 bg-surface-white dark:bg-gray-800 text-charcoal-black dark:text-surface-white placeholder-faded-grey dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-blue;
+    @apply w-full px-3 py-2 rounded border border-graphite-grey bg-surface-white text-charcoal-black;
+    @apply placeholder-faded-grey focus:outline-none focus:ring-2 focus:ring-sky-blue focus:border-sky-blue;
   }
 
   .label {
-    @apply block text-sm font-medium text-charcoal-black dark:text-surface-white mb-2;
+    @apply block text-sm font-medium text-charcoal-black mb-2;
+  }
+
+  /* PostHog tab navigation */
+  .ph-tabs {
+    @apply flex gap-2 border-b border-pale-granite;
+  }
+
+  .ph-tab {
+    @apply px-3 py-2.5 font-medium text-faded-grey transition-colors;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .ph-tab:hover {
+    @apply text-charcoal-black;
+  }
+
+  .ph-tab-active {
+    @apply text-charcoal-black border-b-2 border-sky-blue;
+  }
+
+  .ph-badge-shared {
+    @apply text-xs px-2 py-0.5 rounded font-medium bg-warm-gray-tint text-charcoal-black;
+  }
+
+  .ph-badge-invitee {
+    @apply text-xs px-2 py-0.5 rounded font-medium bg-pale-granite text-graphite-grey;
   }
 }

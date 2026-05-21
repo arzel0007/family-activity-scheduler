@@ -9,7 +9,6 @@ const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY || ''
 export async function initFCM() {
   try {
     if (!VAPID_KEY) {
-      console.warn('FCM VAPID key not configured')
       return null
     }
 

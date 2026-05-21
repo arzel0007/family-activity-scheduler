@@ -1,25 +1,24 @@
-export type Theme = 'light' | 'dark'
+/** PostHog Workshop — light theme only (see postHog/DESIGN.md in personalDailyTracker) */
+export type Theme = 'posthog'
+
+const STORAGE_KEY = 'theme'
 
 export function getTheme(): Theme {
-  const stored = localStorage.getItem('theme') as Theme | null
-  if (stored) return stored
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return 'posthog'
 }
 
-export function setTheme(theme: Theme) {
-  localStorage.setItem('theme', theme)
-  document.documentElement.classList.toggle('dark', theme === 'dark')
-}
-
-export function toggleTheme() {
-  const current = getTheme()
-  const next = current === 'light' ? 'dark' : 'light'
-  setTheme(next)
-  return next
+export function setTheme(_theme: Theme) {
+  localStorage.setItem(STORAGE_KEY, 'posthog')
+  applyPostHogTheme()
 }
 
 export function initTheme() {
-  const theme = getTheme()
-  document.documentElement.classList.toggle('dark', theme === 'dark')
+  localStorage.setItem(STORAGE_KEY, 'posthog')
+  applyPostHogTheme()
+}
+
+function applyPostHogTheme() {
+  const root = document.documentElement
+  root.setAttribute('data-theme', 'posthog')
+  root.classList.remove('dark')
 }

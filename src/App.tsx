@@ -6,6 +6,7 @@ import { LoginPage } from './components/LoginPage'
 import { Header } from './components/Header'
 import { SearchFilterModal } from './components/SearchFilterModal'
 import { RecurringActivityModal } from './components/RecurringActivityModal'
+import { AdminPanel } from './components/AdminPanel'
 import { initTheme } from './lib/theme'
 import { initFCM, listenForMessages } from './lib/fcm'
 import { subscribeParentToNotifications } from './lib/notificationService'
@@ -14,9 +15,9 @@ import { exportActivitiesAndKids, importActivitiesAndKids } from './lib/importEx
 import { useToast } from './lib/toast'
 
 function App() {
-  const { user, loading } = useAuth()
+  const { user, loading, isSuperAdmin } = useAuth()
   const { addToast } = useToast()
-  const [activeTab, setActiveTab] = useState<'kids' | 'activities'>('kids')
+  const [activeTab, setActiveTab] = useState<'kids' | 'activities' | 'admin'>('kids')
   const [showSearch, setShowSearch] = useState(false)
   const [showRecurring, setShowRecurring] = useState(false)
   const [activities, setActivities] = useState<any[]>([])
@@ -45,10 +46,11 @@ function App() {
       }
     })
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => {
-        console.error('Service Worker registration failed:', err)
+    // Register service worker (must respect Vite base path)
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      const swUrl = `${import.meta.env.BASE_URL}sw.js`
+      navigator.serviceWorker.register(swUrl).catch(() => {
+        // Offline/PWA is optional in local dev
       })
     }
   }, [user, addToast])
@@ -67,41 +69,47 @@ function App() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-canvas-sand text-graphite-grey">
+        Loading...
+      </div>
+    )
+  }
 
   if (!user) return <LoginPage />
 
   return (
-    <div className="min-h-screen bg-surface-white dark:bg-charcoal-black transition-colors">
+    <div className="min-h-screen bg-canvas-sand">
       <Header
         onAddActivity={() => setShowRecurring(true)}
         onExport={handleExport}
         onSearch={() => setShowSearch(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex gap-8 border-b border-pale-granite dark:border-gray-700 flex-1">
+      <main className="max-w-[958px] mx-auto px-6 py-8">
+        <div className="flex justify-between items-center mb-8 gap-4">
+          <div className="ph-tabs flex-1">
             <button
               onClick={() => setActiveTab('kids')}
-              className={`px-3 py-2 font-medium transition-colors ${
-                activeTab === 'kids'
-                  ? 'border-b-2 border-sky-blue text-sky-blue'
-                  : 'text-graphite-grey dark:text-gray-400 hover:text-charcoal-black dark:hover:text-surface-white'
-              }`}
+              className={`ph-tab ${activeTab === 'kids' ? 'ph-tab-active' : ''}`}
             >
               Kids
             </button>
             <button
               onClick={() => setActiveTab('activities')}
-              className={`px-3 py-2 font-medium transition-colors ${
-                activeTab === 'activities'
-                  ? 'border-b-2 border-sky-blue text-sky-blue'
-                  : 'text-graphite-grey dark:text-gray-400 hover:text-charcoal-black dark:hover:text-surface-white'
-              }`}
+              className={`ph-tab ${activeTab === 'activities' ? 'ph-tab-active' : ''}`}
             >
               Activities
             </button>
+            {isSuperAdmin && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`ph-tab ${activeTab === 'admin' ? 'ph-tab-active' : ''}`}
+              >
+                Admin
+              </button>
+            )}
           </div>
           <label className="ml-4">
             <input
@@ -122,6 +130,7 @@ function App() {
             onTagsChange={setTags}
           />
         )}
+        {activeTab === 'admin' && isSuperAdmin && <AdminPanel />}
       </main>
 
       <SearchFilterModal

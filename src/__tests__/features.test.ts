@@ -31,11 +31,11 @@ describe('Search & Filter', () => {
 })
 
 describe('Theme', () => {
-  it('should set and get theme', () => {
-    setTheme('dark')
-    expect(getTheme()).toBe('dark')
-    setTheme('light')
-    expect(getTheme()).toBe('light')
+  it('should use PostHog theme', () => {
+    setTheme('posthog')
+    expect(getTheme()).toBe('posthog')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('posthog')
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
   })
 })
 

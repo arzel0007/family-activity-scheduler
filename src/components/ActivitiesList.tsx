@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { generateICS, downloadICS } from '../lib/ics'
 import { Modal } from './Modal'
+import { Avatar } from './Avatar'
 import { useToast } from '../lib/toast'
-
-interface Kid {
-  id: string
-  name: string
-}
+import type { Activity, Kid, Invitee } from '../lib/types'
 
 interface Tag {
   id: string
@@ -16,33 +13,43 @@ interface Tag {
   color: string
 }
 
-interface Note {
-  id: string
-  content: string
+function mergeActivities(owned: Activity[], shared: Activity[]): Activity[] {
+  const map = new Map<string, Activity>()
+  owned.forEach((a) => map.set(a.id, { ...a, shared: false }))
+  shared.forEach((a) => map.set(a.id, { ...a, shared: true }))
+  return Array.from(map.values()).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
 }
 
-interface Activity {
-  id: string
-  title: string
-  description: string
-  dueDate: string
-  dueTime: string
-  kidIds: string[]
-  tagIds: string[]
-  notes: Note[]
+function getKidDisplay(
+  activity: Activity,
+  kids: Kid[]
+): { id: string; name: string; photoURL?: string }[] {
+  if (activity.kidsOnActivity?.length) {
+    return activity.kidsOnActivity
+  }
+  return (activity.kidIds || [])
+    .map((id) => kids.find((k) => k.id === id))
+    .filter((k): k is Kid => !!k)
+    .map((k) => ({ id: k.id, name: k.name, photoURL: k.photoURL }))
 }
 
 export function ActivitiesList({
   onActivitiesChange,
   onKidsChange,
-  onTagsChange
+  onTagsChange,
 }: {
   onActivitiesChange?: (activities: Activity[]) => void
   onKidsChange?: (kids: Kid[]) => void
   onTagsChange?: (tags: Tag[]) => void
 } = {}) {
   const { addToast } = useToast()
-  const [activities, setActivities] = useState<Activity[]>([])
+  const [ownedActivities, setOwnedActivities] = useState<Activity[]>([])
+  const [sharedActivities, setSharedActivities] = useState<Activity[]>([])
+  const activities = useMemo(
+    () => mergeActivities(ownedActivities, sharedActivities),
+    [ownedActivities, sharedActivities]
+  )
+  const lastSyncedActivities = useRef('')
   const [kids, setKids] = useState<Kid[]>([])
   const [tags, setTags] = useState<Tag[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,53 +65,98 @@ export function ActivitiesList({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    location: '',
     dueDate: '',
     dueTime: '',
   })
 
+  const isOwned = useCallback(
+    (activity: Activity) => activity.userId === auth.currentUser?.uid && !activity.shared,
+    []
+  )
+
   useEffect(() => {
+    const signature = activities.map((a) => a.id).join(',')
+    if (signature === lastSyncedActivities.current) return
+    lastSyncedActivities.current = signature
     onActivitiesChange?.(activities)
   }, [activities, onActivitiesChange])
 
+  const lastSyncedKids = useRef('')
   useEffect(() => {
+    const signature = kids.map((k) => k.id).join(',')
+    if (signature === lastSyncedKids.current) return
+    lastSyncedKids.current = signature
     onKidsChange?.(kids)
   }, [kids, onKidsChange])
 
+  const lastSyncedTags = useRef('')
   useEffect(() => {
+    const signature = tags.map((t) => t.id).join(',')
+    if (signature === lastSyncedTags.current) return
+    lastSyncedTags.current = signature
     onTagsChange?.(tags)
   }, [tags, onTagsChange])
 
   useEffect(() => {
     if (!auth.currentUser) return
 
-    // Fetch kids
-    const kidsQuery = query(collection(db, 'kids'), where('userId', '==', auth.currentUser.uid))
+    const uid = auth.currentUser.uid
+    let ownedReady = false
+    let sharedReady = false
+
+    const kidsQuery = query(collection(db, 'kids'), where('userId', '==', uid))
     const kidsUnsub = onSnapshot(kidsQuery, (snapshot) => {
-      setKids(snapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().name })))
+      setKids(
+        snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          name: docSnap.data().name,
+          photoURL: docSnap.data().photoURL,
+        })) as Kid[]
+      )
     })
 
-    // Fetch tags
-    const tagsQuery = query(collection(db, 'tags'), where('userId', '==', auth.currentUser.uid))
+    const tagsQuery = query(collection(db, 'tags'), where('userId', '==', uid))
     const tagsUnsub = onSnapshot(tagsQuery, (snapshot) => {
-      setTags(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Tag[])
+      setTags(snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })) as Tag[])
     })
 
-    // Fetch activities
-    const activitiesQuery = query(collection(db, 'activities'), where('userId', '==', auth.currentUser.uid))
-    const activitiesUnsub = onSnapshot(activitiesQuery, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        notes: doc.data().notes || [],
-      })) as Activity[]
-      setActivities(data.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')))
-      setLoading(false)
+    const ownedQuery = query(collection(db, 'activities'), where('userId', '==', uid))
+    const ownedUnsub = onSnapshot(ownedQuery, (snapshot) => {
+      setOwnedActivities(
+        snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+          notes: docSnap.data().notes || [],
+          shared: false,
+        })) as Activity[]
+      )
+      ownedReady = true
+      if (sharedReady) setLoading(false)
+    })
+
+    const sharedQuery = query(
+      collection(db, 'activities'),
+      where('inviteeIds', 'array-contains', uid)
+    )
+    const sharedUnsub = onSnapshot(sharedQuery, (snapshot) => {
+      setSharedActivities(
+        snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+          notes: docSnap.data().notes || [],
+          shared: true,
+        })) as Activity[]
+      )
+      sharedReady = true
+      if (ownedReady) setLoading(false)
     })
 
     return () => {
       kidsUnsub()
       tagsUnsub()
-      activitiesUnsub()
+      ownedUnsub()
+      sharedUnsub()
     }
   }, [])
 
@@ -114,26 +166,26 @@ export function ActivitiesList({
 
     setSubmitting(true)
     try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location.trim(),
+        dueDate: formData.dueDate,
+        dueTime: formData.dueTime,
+        kidIds: selectedKids,
+        tagIds: selectedTags,
+      }
+
       if (editingId) {
-        await updateDoc(doc(db, 'activities', editingId), {
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-          dueTime: formData.dueTime,
-          kidIds: selectedKids,
-          tagIds: selectedTags,
-        })
+        await updateDoc(doc(db, 'activities', editingId), payload)
         addToast({ message: 'Activity updated', type: 'success' })
       } else {
         await addDoc(collection(db, 'activities'), {
           userId: auth.currentUser.uid,
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-          dueTime: formData.dueTime,
-          kidIds: selectedKids,
-          tagIds: selectedTags,
+          ...payload,
           notes: [],
+          inviteeIds: [],
+          invitees: [],
           createdAt: new Date(),
         })
         addToast({ message: 'Activity created', type: 'success' })
@@ -150,10 +202,10 @@ export function ActivitiesList({
 
   async function handleAddNote(activityId: string) {
     if (!newNote.trim()) return
-    try {
-      const activity = activities.find((a) => a.id === activityId)
-      if (!activity) return
+    const activity = activities.find((a) => a.id === activityId)
+    if (!activity || !isOwned(activity)) return
 
+    try {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: [...(activity.notes || []), { id: Date.now().toString(), content: newNote }],
       })
@@ -166,10 +218,10 @@ export function ActivitiesList({
   }
 
   async function handleDeleteNote(activityId: string, noteId: string) {
-    try {
-      const activity = activities.find((a) => a.id === activityId)
-      if (!activity) return
+    const activity = activities.find((a) => a.id === activityId)
+    if (!activity || !isOwned(activity)) return
 
+    try {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: activity.notes.filter((n) => n.id !== noteId),
       })
@@ -196,10 +248,12 @@ export function ActivitiesList({
   }
 
   function handleEdit(activity: Activity) {
+    if (!isOwned(activity)) return
     setEditingId(activity.id)
     setFormData({
       title: activity.title,
       description: activity.description || '',
+      location: activity.location || '',
       dueDate: activity.dueDate || '',
       dueTime: activity.dueTime || '',
     })
@@ -209,13 +263,14 @@ export function ActivitiesList({
   }
 
   function handleExport() {
-    const ics = generateICS(activities, kids)
+    const owned = activities.filter((a) => isOwned(a))
+    const ics = generateICS(owned, kids)
     downloadICS(ics, `activities-${new Date().toISOString().split('T')[0]}.ics`)
     addToast({ message: 'Calendar exported', type: 'success' })
   }
 
   function resetForm() {
-    setFormData({ title: '', description: '', dueDate: '', dueTime: '' })
+    setFormData({ title: '', description: '', location: '', dueDate: '', dueTime: '' })
     setSelectedKids([])
     setSelectedTags([])
     setEditingId(null)
@@ -229,11 +284,8 @@ export function ActivitiesList({
       <div className="flex justify-between items-center flex-wrap gap-2">
         <h2 className="text-2xl font-bold text-charcoal-black">Activities</h2>
         <div className="space-x-2 flex flex-wrap">
-          {activities.length > 0 && (
-            <button
-              onClick={handleExport}
-              className="btn-primary text-sm px-3 py-2"
-            >
+          {ownedActivities.length > 0 && (
+            <button onClick={handleExport} className="btn-primary text-sm px-3 py-2">
               Export
             </button>
           )}
@@ -249,8 +301,18 @@ export function ActivitiesList({
         </div>
       </div>
 
+      {sharedActivities.length > 0 && (
+        <p className="text-sm text-graphite-grey">
+          {sharedActivities.length} shared{' '}
+          {sharedActivities.length === 1 ? 'activity' : 'activities'} from other parents
+        </p>
+      )}
+
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-canvas-sand p-6 rounded-md border border-pale-granite space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-canvas-sand"
+        >
           <div>
             <label className="label">Activity Title</label>
             <input
@@ -270,6 +332,16 @@ export function ActivitiesList({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="input"
               rows={3}
+            />
+          </div>
+          <div>
+            <label className="label">Location</label>
+            <input
+              type="text"
+              placeholder="e.g. Lincoln Elementary, 123 Main St"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="input"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -296,7 +368,7 @@ export function ActivitiesList({
             <label className="label">Select Kids</label>
             <div className="space-y-2">
               {kids.map((kid) => (
-                <label key={kid.id} className="flex items-center cursor-pointer">
+                <label key={kid.id} className="flex items-center cursor-pointer gap-2">
                   <input
                     type="checkbox"
                     checked={selectedKids.includes(kid.id)}
@@ -307,8 +379,9 @@ export function ActivitiesList({
                         setSelectedKids(selectedKids.filter((id) => id !== kid.id))
                       }
                     }}
-                    className="mr-2 w-4 h-4"
+                    className="w-4 h-4"
                   />
+                  <Avatar name={kid.name} photoURL={kid.photoURL} size="sm" />
                   <span className="text-charcoal-black">{kid.name}</span>
                 </label>
               ))}
@@ -348,97 +421,140 @@ export function ActivitiesList({
       )}
 
       <div className="grid gap-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="card p-4">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg text-charcoal-black">{activity.title}</h3>
-                {activity.description && <p className="text-sm text-graphite-grey">{activity.description}</p>}
-              </div>
-              <div className="space-x-2 flex">
-                <button
-                  onClick={() => handleEdit(activity)}
-                  className="btn-secondary text-sm"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => setDeleteActivityId(activity.id)}
-                  className="btn-secondary text-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-            <div className="text-sm text-graphite-grey mb-2">
-              {activity.dueDate && <span>{activity.dueDate}</span>}
-              {activity.dueTime && <span> at {activity.dueTime}</span>}
-            </div>
-            <div className="mt-2 text-sm mb-2">
-              <span className="font-medium text-charcoal-black">Kids: </span>
-              <span className="text-graphite-grey">
-                {activity.kidIds.length > 0
-                  ? activity.kidIds
-                      .map((id) => kids.find((k) => k.id === id)?.name)
-                      .filter(Boolean)
-                      .join(', ')
-                  : 'No kids assigned'}
-              </span>
-            </div>
-            {activity.tagIds.length > 0 && (
-              <div className="flex gap-2 mb-2">
-                {activity.tagIds.map((tagId) => {
-                  const tag = tags.find((t) => t.id === tagId)
-                  return tag ? (
-                    <span key={tag.id} className="px-2 py-1 rounded text-xs text-ink-black" style={{ backgroundColor: tag.color }}>
-                      {tag.name}
-                    </span>
-                  ) : null
-                })}
-              </div>
-            )}
-            <button
-              onClick={() => setExpandedActivity(expandedActivity === activity.id ? null : activity.id)}
-              className="text-sky-blue text-sm hover:underline font-medium"
-            >
-              {expandedActivity === activity.id ? 'Hide' : 'Show'} Notes ({activity.notes.length})
-            </button>
-            {expandedActivity === activity.id && (
-              <div className="mt-3 space-y-2 border-t border-pale-granite pt-3">
-                {activity.notes.map((note) => (
-                  <div key={note.id} className="bg-canvas-sand p-2 rounded flex justify-between items-start">
-                    <p className="text-sm text-charcoal-black">{note.content}</p>
+        {activities.map((activity) => {
+          const owned = isOwned(activity)
+          const kidDisplay = getKidDisplay(activity, kids)
+          const invitees = (activity.invitees || []) as Invitee[]
+
+          return (
+            <div key={activity.id} className="card p-4">
+              <div className="flex justify-between items-start mb-3 gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-lg text-charcoal-black">
+                      {activity.title}
+                    </h3>
+                    {activity.shared && (
+                      <span className="ph-badge-shared">Shared with you</span>
+                    )}
+                  </div>
+                  {activity.description && (
+                    <p className="text-sm text-graphite-grey">{activity.description}</p>
+                  )}
+                  {activity.location && (
+                    <p className="text-sm text-graphite-grey mt-1">📍 {activity.location}</p>
+                  )}
+                </div>
+                {owned && (
+                  <div className="space-x-2 flex shrink-0">
+                    <button onClick={() => handleEdit(activity)} className="btn-secondary text-sm">
+                      Edit
+                    </button>
                     <button
-                      onClick={() => handleDeleteNote(activity.id, note.id)}
-                      className="text-sunset-orange text-xs hover:underline"
+                      onClick={() => setDeleteActivityId(activity.id)}
+                      className="btn-secondary text-sm"
                     >
                       Delete
                     </button>
                   </div>
-                ))}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Add a note..."
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    className="flex-1 px-2 py-1 border border-graphite-grey rounded text-sm bg-surface-white text-charcoal-black"
-                  />
-                  <button
-                    onClick={() => handleAddNote(activity.id)}
-                    className="btn-primary text-sm"
-                  >
-                    Add
-                  </button>
-                </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+              <div className="text-sm text-graphite-grey mb-2">
+                {activity.dueDate && <span>{activity.dueDate}</span>}
+                {activity.dueTime && <span> at {activity.dueTime}</span>}
+              </div>
+              <div className="mt-2 text-sm mb-2">
+                <span className="font-medium text-charcoal-black">Kids: </span>
+                {kidDisplay.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {kidDisplay.map((kid) => (
+                      <div key={kid.id} className="flex items-center gap-1.5">
+                        <Avatar name={kid.name} photoURL={kid.photoURL} size="sm" />
+                        <span className="text-graphite-grey">{kid.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-graphite-grey">No kids assigned</span>
+                )}
+              </div>
+              {invitees.length > 0 && (
+                <div className="text-sm mb-2">
+                  <span className="font-medium text-charcoal-black">
+                    Invitees:{' '}
+                  </span>
+                  <span className="text-graphite-grey">
+                    {invitees.map((i) => i.email || i.displayName || i.userId).join(', ')}
+                  </span>
+                </div>
+              )}
+              {activity.tagIds?.length > 0 && (
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  {activity.tagIds.map((tagId) => {
+                    const tag = tags.find((t) => t.id === tagId)
+                    return tag ? (
+                      <span
+                        key={tag.id}
+                        className="px-2 py-1 rounded text-xs text-ink-black"
+                        style={{ backgroundColor: tag.color }}
+                      >
+                        {tag.name}
+                      </span>
+                    ) : null
+                  })}
+                </div>
+              )}
+              <button
+                onClick={() =>
+                  setExpandedActivity(expandedActivity === activity.id ? null : activity.id)
+                }
+                className="text-sky-blue text-sm hover:underline font-medium"
+              >
+                {expandedActivity === activity.id ? 'Hide' : 'Show'} Notes ({activity.notes?.length || 0})
+              </button>
+              {expandedActivity === activity.id && (
+                <div className="mt-3 space-y-2 border-t border-pale-granite">
+                  {(activity.notes || []).map((note) => (
+                    <div
+                      key={note.id}
+                      className="bg-canvas-sand"
+                    >
+                      <p className="text-sm text-charcoal-black">{note.content}</p>
+                      {owned && (
+                        <button
+                          onClick={() => handleDeleteNote(activity.id, note.id)}
+                          className="text-sunset-orange text-xs hover:underline"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {owned && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a note..."
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                        className="flex-1 px-2 py-1 border border-graphite-grey rounded text-sm bg-surface-white"
+                      />
+                      <button onClick={() => handleAddNote(activity.id)} className="btn-primary text-sm">
+                        Add
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {activities.length === 0 && !showForm && (
-        <p className="text-graphite-grey text-center py-8">No activities yet. Click "Add Activity" to get started!</p>
+        <p className="text-graphite-grey text-center py-8">
+          No activities yet. Click &quot;Add&quot; to get started!
+        </p>
       )}
 
       <Modal

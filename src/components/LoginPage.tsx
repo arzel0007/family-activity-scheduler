@@ -3,7 +3,7 @@ import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 
 export function LoginPage() {
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, authNotice, clearAuthNotice } = useAuth()
   const { addToast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,9 +30,18 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-white flex items-center justify-center">
+    <div className="min-h-screen bg-canvas-sand flex items-center justify-center px-4">
       <div className="bg-canvas-sand p-8 rounded-md border border-pale-granite max-w-md w-full">
         <h1 className="text-3xl font-bold text-center mb-8 text-charcoal-black">Family Activity Scheduler</h1>
+
+        {authNotice && (
+          <p className="mb-4 p-3 rounded bg-sunset-orange/20 text-charcoal-black text-sm text-center">
+            {authNotice}
+            <button type="button" onClick={clearAuthNotice} className="block mx-auto mt-1 text-sky-blue text-xs">
+              Dismiss
+            </button>
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

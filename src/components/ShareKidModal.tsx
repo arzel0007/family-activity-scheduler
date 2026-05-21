@@ -1,12 +1,8 @@
 import { useState } from 'react'
-import { db } from '../lib/firebase'
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
+import { shareKidActivitiesWithParent } from '../lib/sharing'
+import { Avatar } from './Avatar'
 import { useToast } from '../lib/toast'
-
-interface Kid {
-  id: string
-  name: string
-}
+import type { Kid } from '../lib/types'
 
 interface Props {
   kid: Kid
@@ -24,30 +20,18 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
 
     setLoading(true)
     try {
-      const usersQuery = query(collection(db, 'users'), where('email', '==', email))
-      const snapshot = await getDocs(usersQuery)
-
-      if (snapshot.empty) {
-        addToast({ message: 'User not found', type: 'error' })
-        setLoading(false)
-        return
-      }
-
-      const userId = snapshot.docs[0].id
-
-      await addDoc(collection(db, 'sharedKids'), {
-        kidId: kid.id,
-        userId: userId,
-        sharedBy: 'current-user',
-        createdAt: new Date(),
+      const { sharedCount, inviteeEmail } = await shareKidActivitiesWithParent(kid, email)
+      addToast({
+        message: `Shared ${sharedCount} ${sharedCount === 1 ? 'activity' : 'activities'} with ${inviteeEmail}. They were added as invitees.`,
+        type: 'success',
       })
-
-      addToast({ message: `${kid.name} shared with ${email}`, type: 'success' })
       setEmail('')
       onShare()
-    } catch (err) {
-      addToast({ message: 'Error sharing kid', type: 'error' })
-      console.error('Error sharing kid:', err)
+    } catch (err: unknown) {
+      addToast({
+        message: err instanceof Error ? err.message : 'Error sharing activities',
+        type: 'error',
+      })
     } finally {
       setLoading(false)
     }
@@ -55,11 +39,21 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
 
   return (
     <div className="fixed inset-0 bg-ink-black bg-opacity-25 flex items-center justify-center z-50">
-      <div className="bg-surface-white p-6 rounded-md border border-pale-granite shadow-xl max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4 text-charcoal-black">Share {kid.name}</h2>
+      <div className="bg-surface-white">
+        <div className="flex items-center gap-3 mb-4">
+          <Avatar name={kid.name} photoURL={kid.photoURL} size="md" />
+          <div>
+            <h2 className="text-xl font-bold text-charcoal-black">
+              Share {kid.name}&apos;s activities
+            </h2>
+            <p className="text-sm text-graphite-grey">
+              Invites another parent to all activities for this kid
+            </p>
+          </div>
+        </div>
         <div className="space-y-4">
           <div>
-            <label className="label">Parent Email</label>
+            <label className="label">Parent email</label>
             <input
               type="email"
               placeholder="parent@email.com"
@@ -67,19 +61,19 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
               onChange={(e) => setEmail(e.target.value)}
               className="input"
             />
+            <p className="text-xs text-graphite-grey mt-1">
+              They must already have an account. They will see shared activities and be listed as invitees.
+            </p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleShare}
-              disabled={loading}
+              disabled={loading || !email.trim()}
               className="flex-1 btn-primary disabled:opacity-50"
             >
-              {loading ? 'Sharing...' : 'Share'}
+              {loading ? 'Sharing...' : 'Share activities'}
             </button>
-            <button
-              onClick={onClose}
-              className="flex-1 btn-secondary"
-            >
+            <button onClick={onClose} className="flex-1 btn-secondary">
               Close
             </button>
           </div>

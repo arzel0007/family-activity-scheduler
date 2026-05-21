@@ -3,13 +3,11 @@ import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { ShareKidModal } from './ShareKidModal'
 import { Modal } from './Modal'
+import { Avatar } from './Avatar'
+import { PhotoUpload } from './PhotoUpload'
+import { uploadProfilePhoto, kidPhotoPath, photoUploadSuccessMessage } from '../lib/storage'
 import { useToast } from '../lib/toast'
-
-interface Kid {
-  id: string
-  name: string
-  age: number
-}
+import type { Kid } from '../lib/types'
 
 export function KidsList() {
   const { addToast } = useToast()
@@ -21,16 +19,17 @@ export function KidsList() {
   const [deleteKid, setDeleteKid] = useState<Kid | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [formData, setFormData] = useState({ name: '', age: '' })
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [formData, setFormData] = useState({ name: '', age: '', photoURL: '' })
 
   useEffect(() => {
     if (!auth.currentUser) return
 
     const q = query(collection(db, 'kids'), where('userId', '==', auth.currentUser.uid))
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const data = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
       })) as Kid[]
       setKids(data.sort((a, b) => a.name.localeCompare(b.name)))
       setLoading(false)
@@ -39,29 +38,58 @@ export function KidsList() {
     return unsubscribe
   }, [])
 
+  async function handlePhotoUpload(file: File, kidId?: string) {
+    if (!auth.currentUser) return
+    setUploadingPhoto(true)
+    try {
+      const pathKidId = kidId || 'new'
+      const result = await uploadProfilePhoto(
+        `${kidPhotoPath(auth.currentUser.uid, pathKidId)}_${Date.now()}`,
+        file
+      )
+      setFormData((prev) => ({ ...prev, photoURL: result.url }))
+      if (kidId) {
+        await updateDoc(doc(db, 'kids', kidId), { photoURL: result.url })
+        addToast({
+          message: photoUploadSuccessMessage(result, 'Kid photo'),
+          type: 'success',
+        })
+      }
+    } catch (err: unknown) {
+      addToast({
+        message: err instanceof Error ? err.message : 'Failed to upload photo',
+        type: 'error',
+      })
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!formData.name.trim() || !auth.currentUser || submitting) return
 
     setSubmitting(true)
     try {
+      const payload = {
+        name: formData.name,
+        age: parseInt(formData.age) || null,
+        photoURL: formData.photoURL || '',
+      }
+
       if (editingId) {
-        await updateDoc(doc(db, 'kids', editingId), {
-          name: formData.name,
-          age: parseInt(formData.age) || null,
-        })
+        await updateDoc(doc(db, 'kids', editingId), payload)
         addToast({ message: `${formData.name} updated`, type: 'success' })
       } else {
         await addDoc(collection(db, 'kids'), {
           userId: auth.currentUser.uid,
-          name: formData.name,
-          age: parseInt(formData.age) || null,
+          ...payload,
           createdAt: new Date(),
         })
         addToast({ message: `${formData.name} added`, type: 'success' })
       }
 
-      setFormData({ name: '', age: '' })
+      setFormData({ name: '', age: '', photoURL: '' })
       setEditingId(null)
       setShowForm(false)
     } catch (err) {
@@ -89,7 +117,11 @@ export function KidsList() {
 
   function handleEdit(kid: Kid) {
     setEditingId(kid.id)
-    setFormData({ name: kid.name, age: kid.age.toString() })
+    setFormData({
+      name: kid.name,
+      age: kid.age?.toString() || '',
+      photoURL: kid.photoURL || '',
+    })
     setShowForm(true)
   }
 
@@ -103,7 +135,7 @@ export function KidsList() {
           onClick={() => {
             setShowForm(!showForm)
             setEditingId(null)
-            setFormData({ name: '', age: '' })
+            setFormData({ name: '', age: '', photoURL: '' })
           }}
           className="btn-primary"
         >
@@ -112,9 +144,16 @@ export function KidsList() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-canvas-sand p-6 rounded-md border border-pale-granite space-y-4">
+        <form onSubmit={handleSubmit} className="bg-canvas-sand">
+          <PhotoUpload
+            name={formData.name || 'Kid'}
+            photoURL={formData.photoURL || undefined}
+            onFileSelect={(file) => handlePhotoUpload(file, editingId || undefined)}
+            uploading={uploadingPhoto}
+            label="Kid profile photo"
+          />
           <div>
-            <label className="label">Kid's Name</label>
+            <label className="label">Kid&apos;s Name</label>
             <input
               type="text"
               placeholder="Enter name"
@@ -146,22 +185,27 @@ export function KidsList() {
 
       <div className="grid gap-4">
         {kids.map((kid) => (
-          <div key={kid.id} className="card p-4 flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold text-charcoal-black">{kid.name}</h3>
-              {kid.age && <p className="text-sm text-graphite-grey">Age: {kid.age}</p>}
+          <div key={kid.id} className="card p-4 flex justify-between items-center gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar name={kid.name} photoURL={kid.photoURL} size="md" />
+              <div className="min-w-0">
+                <h3 className="font-semibold text-charcoal-black">
+                  {kid.name}
+                </h3>
+                {kid.age != null && (
+                  <p className="text-sm text-graphite-grey">Age: {kid.age}</p>
+                )}
+              </div>
             </div>
-            <div className="space-x-2 flex">
+            <div className="space-x-2 flex shrink-0">
               <button
                 onClick={() => setShareKid(kid)}
                 className="btn-secondary text-sm"
+                title="Share this kid's activities with another parent"
               >
                 Share
               </button>
-              <button
-                onClick={() => handleEdit(kid)}
-                className="btn-secondary text-sm"
-              >
+              <button onClick={() => handleEdit(kid)} className="btn-secondary text-sm">
                 Edit
               </button>
               <button
@@ -177,7 +221,9 @@ export function KidsList() {
       </div>
 
       {kids.length === 0 && !showForm && (
-        <p className="text-graphite-grey text-center py-8">No kids added yet. Click "Add Kid" to get started!</p>
+        <p className="text-graphite-grey text-center py-8">
+          No kids added yet. Click &quot;Add Kid&quot; to get started!
+        </p>
       )}
 
       {shareKid && (

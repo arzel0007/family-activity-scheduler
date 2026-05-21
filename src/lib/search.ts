@@ -24,7 +24,8 @@ export function filterActivities(
       const term = filters.searchTerm.toLowerCase()
       const matchesTitle = activity.title?.toLowerCase().includes(term)
       const matchesDescription = activity.description?.toLowerCase().includes(term)
-      if (!matchesTitle && !matchesDescription) return false
+      const matchesLocation = activity.location?.toLowerCase().includes(term)
+      if (!matchesTitle && !matchesDescription && !matchesLocation) return false
     }
     
     return true
@@ -35,6 +36,7 @@ export function searchActivities(activities: any[], query: string): any[] {
   const term = query.toLowerCase()
   return activities.filter(activity =>
     activity.title?.toLowerCase().includes(term) ||
-    activity.description?.toLowerCase().includes(term)
+    activity.description?.toLowerCase().includes(term) ||
+    activity.location?.toLowerCase().includes(term)
   )
 }

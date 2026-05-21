@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'xxarzelxx@gmail.com';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isSuperAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    match /kids/{kidId} {
+      allow read: if isSignedIn()
+        && (resource == null || isOwner(resource.data.userId) || isSuperAdmin());
+      allow create: if isSignedIn()
+        && (isOwner(request.resource.data.userId) || isSuperAdmin());
+      allow update, delete: if isSignedIn()
+        && (isOwner(resource.data.userId) || isSuperAdmin());
+    }
+
+    match /activities/{activityId} {
+      allow read: if isSignedIn()
+        && (
+          isSuperAdmin()
+          || isOwner(resource.data.userId)
+          || request.auth.uid in resource.data.get('inviteeIds', [])
+        );
+      allow create: if isSignedIn()
+        && (isOwner(request.resource.data.userId) || isSuperAdmin());
+      allow update, delete: if isSignedIn()
+        && (isOwner(resource.data.userId) || isSuperAdmin());
+    }
+
+    match /tags/{tagId} {
+      allow read: if isSignedIn()
+        && (isSuperAdmin() || isOwner(resource.data.userId));
+      allow create: if isSignedIn()
+        && (isSuperAdmin() || isOwner(request.resource.data.userId));
+      allow update, delete: if isSignedIn()
+        && (isSuperAdmin() || isOwner(resource.data.userId));
+    }
+
+    match /sharedKids/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /users/{userId}/fcmTokens/{tokenId} {
+      allow read, write: if isOwner(userId) || isSuperAdmin();
+    }
+  }
+}

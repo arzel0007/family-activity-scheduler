@@ -33,12 +33,15 @@ END:VTIMEZONE
     const uid = `${activity.id}@familyactivityscheduler.local`
     const dtstamp = timestamp
 
+    const locationLine = activity.location ? `\nLocation: ${activity.location}` : ''
+    const description = `Kids: ${kidNames}\n${activity.description || ''}${locationLine}`
+
     ics += `BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${dtstamp}
 DTSTART:${dtstart}
 SUMMARY:${escapeICS(activity.title)}
-DESCRIPTION:${escapeICS(`Kids: ${kidNames}\n${activity.description || ''}`)}
+DESCRIPTION:${escapeICS(description)}${activity.location ? `\nLOCATION:${escapeICS(activity.location)}` : ''}
 END:VEVENT
 `
   })

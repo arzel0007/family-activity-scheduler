@@ -4,6 +4,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore'
 export async function bulkAssignActivity(
   title: string,
   description: string,
+  location: string,
   dueDate: string,
   dueTime: string,
   kidIds: string[],
@@ -16,11 +17,14 @@ export async function bulkAssignActivity(
       await addDoc(collection(db, 'activities'), {
         title,
         description,
+        location,
         dueDate,
         dueTime,
         kidIds: [kidId],
         tagIds,
         userId: auth.currentUser.uid,
+        inviteeIds: [],
+        invitees: [],
         createdAt: Timestamp.now(),
         archived: false
       })
