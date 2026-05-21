@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { db, auth } from '../lib/firebase'
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { ShareKidModal } from './ShareKidModal'
 
 interface Kid {
@@ -17,49 +18,43 @@ export function KidsList() {
   const [formData, setFormData] = useState({ name: '', age: '' })
 
   useEffect(() => {
-    fetchKids()
-  }, [])
+    if (!auth.currentUser) return
 
-  async function fetchKids() {
-    try {
-      const { data, error } = await supabase
-        .from('kids')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-      setKids(data || [])
-    } catch (err) {
-      console.error('Error fetching kids:', err)
-    } finally {
+    const q = query(collection(db, 'kids'), where('userId', '==', auth.currentUser.uid))
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Kid[]
+      setKids(data.sort((a, b) => a.name.localeCompare(b.name)))
       setLoading(false)
-    }
-  }
+    })
+
+    return unsubscribe
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.name.trim()) return
+    if (!formData.name.trim() || !auth.currentUser) return
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('kids')
-          .update({ name: formData.name, age: parseInt(formData.age) || null })
-          .eq('id', editingId)
-
-        if (error) throw error
+        await updateDoc(doc(db, 'kids', editingId), {
+          name: formData.name,
+          age: parseInt(formData.age) || null,
+        })
       } else {
-        const { error } = await supabase
-          .from('kids')
-          .insert([{ name: formData.name, age: parseInt(formData.age) || null }])
-
-        if (error) throw error
+        await addDoc(collection(db, 'kids'), {
+          userId: auth.currentUser.uid,
+          name: formData.name,
+          age: parseInt(formData.age) || null,
+          createdAt: new Date(),
+        })
       }
 
       setFormData({ name: '', age: '' })
       setEditingId(null)
       setShowForm(false)
-      fetchKids()
     } catch (err) {
       console.error('Error saving kid:', err)
     }
@@ -67,9 +62,7 @@ export function KidsList() {
 
   async function handleDelete(id: string) {
     try {
-      const { error } = await supabase.from('kids').delete().eq('id', id)
-      if (error) throw error
-      fetchKids()
+      await deleteDoc(doc(db, 'kids', id))
     } catch (err) {
       console.error('Error deleting kid:', err)
     }
@@ -164,10 +157,7 @@ export function KidsList() {
         <ShareKidModal
           kid={shareKid}
           onClose={() => setShareKid(null)}
-          onShare={() => {
-            setShareKid(null)
-            fetchKids()
-          }}
+          onShare={() => setShareKid(null)}
         />
       )}
     </div>

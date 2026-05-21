@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { db, auth } from '../lib/firebase'
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { generateICS, downloadICS } from '../lib/ics'
 
 interface Kid {
@@ -22,11 +23,11 @@ interface Activity {
   id: string
   title: string
   description: string
-  due_date: string
-  due_time: string
-  activity_kids: { kid_id: string }[]
+  dueDate: string
+  dueTime: string
+  kidIds: string[]
+  tagIds: string[]
   notes: Note[]
-  activity_tags: { tag_id: string }[]
 }
 
 export function ActivitiesList() {
@@ -43,81 +44,73 @@ export function ActivitiesList() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    due_date: '',
-    due_time: '',
+    dueDate: '',
+    dueTime: '',
   })
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (!auth.currentUser) return
 
-  async function fetchData() {
-    try {
-      const [activitiesRes, kidsRes, tagsRes] = await Promise.all([
-        supabase.from('activities').select('*, activity_kids(kid_id), notes(id, content), activity_tags(tag_id)').order('due_date'),
-        supabase.from('kids').select('id, name').order('name'),
-        supabase.from('tags').select('*').order('name'),
-      ])
+    // Fetch kids
+    const kidsQuery = query(collection(db, 'kids'), where('userId', '==', auth.currentUser.uid))
+    const kidsUnsub = onSnapshot(kidsQuery, (snapshot) => {
+      setKids(snapshot.docs.map((doc) => ({ id: doc.id, name: doc.data().name })))
+    })
 
-      if (activitiesRes.error) throw activitiesRes.error
-      if (kidsRes.error) throw kidsRes.error
-      if (tagsRes.error) throw tagsRes.error
+    // Fetch tags
+    const tagsQuery = query(collection(db, 'tags'), where('userId', '==', auth.currentUser.uid))
+    const tagsUnsub = onSnapshot(tagsQuery, (snapshot) => {
+      setTags(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Tag[])
+    })
 
-      setActivities(activitiesRes.data || [])
-      setKids(kidsRes.data || [])
-      setTags(tagsRes.data || [])
-    } catch (err) {
-      console.error('Error fetching data:', err)
-    } finally {
+    // Fetch activities
+    const activitiesQuery = query(collection(db, 'activities'), where('userId', '==', auth.currentUser.uid))
+    const activitiesUnsub = onSnapshot(activitiesQuery, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        notes: doc.data().notes || [],
+      })) as Activity[]
+      setActivities(data.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')))
       setLoading(false)
+    })
+
+    return () => {
+      kidsUnsub()
+      tagsUnsub()
+      activitiesUnsub()
     }
-  }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.title.trim() || selectedKids.length === 0) return
+    if (!formData.title.trim() || selectedKids.length === 0 || !auth.currentUser) return
 
     try {
       if (editingId) {
-        const { error } = await supabase
-          .from('activities')
-          .update(formData)
-          .eq('id', editingId)
-
-        if (error) throw error
-
-        await supabase.from('activity_kids').delete().eq('activity_id', editingId)
-        await supabase.from('activity_kids').insert(
-          selectedKids.map((kid_id) => ({ activity_id: editingId, kid_id }))
-        )
-
-        await supabase.from('activity_tags').delete().eq('activity_id', editingId)
-        if (selectedTags.length > 0) {
-          await supabase.from('activity_tags').insert(
-            selectedTags.map((tag_id) => ({ activity_id: editingId, tag_id }))
-          )
-        }
+        await updateDoc(doc(db, 'activities', editingId), {
+          title: formData.title,
+          description: formData.description,
+          dueDate: formData.dueDate,
+          dueTime: formData.dueTime,
+          kidIds: selectedKids,
+          tagIds: selectedTags,
+        })
       } else {
-        const { data, error } = await supabase
-          .from('activities')
-          .insert([formData])
-          .select()
-
-        if (error) throw error
-        if (data?.[0]) {
-          await supabase.from('activity_kids').insert(
-            selectedKids.map((kid_id) => ({ activity_id: data[0].id, kid_id }))
-          )
-          if (selectedTags.length > 0) {
-            await supabase.from('activity_tags').insert(
-              selectedTags.map((tag_id) => ({ activity_id: data[0].id, tag_id }))
-            )
-          }
-        }
+        await addDoc(collection(db, 'activities'), {
+          userId: auth.currentUser.uid,
+          title: formData.title,
+          description: formData.description,
+          dueDate: formData.dueDate,
+          dueTime: formData.dueTime,
+          kidIds: selectedKids,
+          tagIds: selectedTags,
+          notes: [],
+          createdAt: new Date(),
+        })
       }
 
       resetForm()
-      fetchData()
     } catch (err) {
       console.error('Error saving activity:', err)
     }
@@ -126,20 +119,26 @@ export function ActivitiesList() {
   async function handleAddNote(activityId: string) {
     if (!newNote.trim()) return
     try {
-      const { error } = await supabase.from('notes').insert([{ activity_id: activityId, content: newNote }])
-      if (error) throw error
+      const activity = activities.find((a) => a.id === activityId)
+      if (!activity) return
+
+      await updateDoc(doc(db, 'activities', activityId), {
+        notes: [...(activity.notes || []), { id: Date.now().toString(), content: newNote }],
+      })
       setNewNote('')
-      fetchData()
     } catch (err) {
       console.error('Error adding note:', err)
     }
   }
 
-  async function handleDeleteNote(noteId: string) {
+  async function handleDeleteNote(activityId: string, noteId: string) {
     try {
-      const { error } = await supabase.from('notes').delete().eq('id', noteId)
-      if (error) throw error
-      fetchData()
+      const activity = activities.find((a) => a.id === activityId)
+      if (!activity) return
+
+      await updateDoc(doc(db, 'activities', activityId), {
+        notes: activity.notes.filter((n) => n.id !== noteId),
+      })
     } catch (err) {
       console.error('Error deleting note:', err)
     }
@@ -147,9 +146,7 @@ export function ActivitiesList() {
 
   async function handleDelete(id: string) {
     try {
-      const { error } = await supabase.from('activities').delete().eq('id', id)
-      if (error) throw error
-      fetchData()
+      await deleteDoc(doc(db, 'activities', id))
     } catch (err) {
       console.error('Error deleting activity:', err)
     }
@@ -160,21 +157,25 @@ export function ActivitiesList() {
     setFormData({
       title: activity.title,
       description: activity.description || '',
-      due_date: activity.due_date || '',
-      due_time: activity.due_time || '',
+      dueDate: activity.dueDate || '',
+      dueTime: activity.dueTime || '',
     })
-    setSelectedKids(activity.activity_kids.map((ak) => ak.kid_id))
-    setSelectedTags(activity.activity_tags.map((at) => at.tag_id))
+    setSelectedKids(activity.kidIds || [])
+    setSelectedTags(activity.tagIds || [])
     setShowForm(true)
   }
 
   function handleExport() {
-    const ics = generateICS(activities, kids)
+    const exportActivities = activities.map((a) => ({
+      ...a,
+      activity_kids: a.kidIds.map((id) => ({ kid_id: id })),
+    }))
+    const ics = generateICS(exportActivities, kids)
     downloadICS(ics, `activities-${new Date().toISOString().split('T')[0]}.ics`)
   }
 
   function resetForm() {
-    setFormData({ title: '', description: '', due_date: '', due_time: '' })
+    setFormData({ title: '', description: '', dueDate: '', dueTime: '' })
     setSelectedKids([])
     setSelectedTags([])
     setEditingId(null)
@@ -228,14 +229,14 @@ export function ActivitiesList() {
           <div className="grid grid-cols-2 gap-3">
             <input
               type="date"
-              value={formData.due_date}
-              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              value={formData.dueDate}
+              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
               className="px-3 py-2 border rounded"
             />
             <input
               type="time"
-              value={formData.due_time}
-              onChange={(e) => setFormData({ ...formData, due_time: e.target.value })}
+              value={formData.dueTime}
+              onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
               className="px-3 py-2 border rounded"
             />
           </div>
@@ -278,10 +279,7 @@ export function ActivitiesList() {
                     }}
                     className="mr-2"
                   />
-                  <span
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: tag.color }}
-                  />
+                  <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: tag.color }} />
                   {tag.name}
                 </label>
               ))}
@@ -320,28 +318,24 @@ export function ActivitiesList() {
               </div>
             </div>
             <div className="text-sm text-gray-500 mb-2">
-              {activity.due_date && <span>{activity.due_date}</span>}
-              {activity.due_time && <span> at {activity.due_time}</span>}
+              {activity.dueDate && <span>{activity.dueDate}</span>}
+              {activity.dueTime && <span> at {activity.dueTime}</span>}
             </div>
             <div className="mt-2 text-sm mb-2">
               <span className="font-medium">Kids: </span>
-              {activity.activity_kids.length > 0
-                ? activity.activity_kids
-                    .map((ak) => kids.find((k) => k.id === ak.kid_id)?.name)
+              {activity.kidIds.length > 0
+                ? activity.kidIds
+                    .map((id) => kids.find((k) => k.id === id)?.name)
                     .filter(Boolean)
                     .join(', ')
                 : 'No kids assigned'}
             </div>
-            {activity.activity_tags.length > 0 && (
+            {activity.tagIds.length > 0 && (
               <div className="flex gap-2 mb-2">
-                {activity.activity_tags.map((at) => {
-                  const tag = tags.find((t) => t.id === at.tag_id)
+                {activity.tagIds.map((tagId) => {
+                  const tag = tags.find((t) => t.id === tagId)
                   return tag ? (
-                    <span
-                      key={tag.id}
-                      className="px-2 py-1 rounded text-xs text-white"
-                      style={{ backgroundColor: tag.color }}
-                    >
+                    <span key={tag.id} className="px-2 py-1 rounded text-xs text-white" style={{ backgroundColor: tag.color }}>
                       {tag.name}
                     </span>
                   ) : null
@@ -360,7 +354,7 @@ export function ActivitiesList() {
                   <div key={note.id} className="bg-gray-50 p-2 rounded flex justify-between items-start">
                     <p className="text-sm">{note.content}</p>
                     <button
-                      onClick={() => handleDeleteNote(note.id)}
+                      onClick={() => handleDeleteNote(activity.id, note.id)}
                       className="text-red-500 text-xs hover:underline"
                     >
                       Delete

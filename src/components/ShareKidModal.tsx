@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { db } from '../lib/firebase'
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore'
 
 interface Kid {
   id: string
@@ -22,35 +23,25 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
 
     setLoading(true)
     try {
-      // Get the user by email
-      const { data: userData, error: userError } = await supabase
-        .from('auth.users')
-        .select('id')
-        .eq('email', email)
-        .single()
+      // Find user by email (simplified - in production use Firebase Admin SDK)
+      const usersQuery = query(collection(db, 'users'), where('email', '==', email))
+      const snapshot = await getDocs(usersQuery)
 
-      if (userError || !userData) {
+      if (snapshot.empty) {
         setMessage('User not found')
+        setLoading(false)
         return
       }
 
-      // Add user_kids entry
-      const { error } = await supabase.from('user_kids').insert([
-        {
-          user_id: userData.id,
-          kid_id: kid.id,
-          role: 'parent',
-        },
-      ])
+      const userId = snapshot.docs[0].id
 
-      if (error) {
-        if (error.code === '23505') {
-          setMessage('This user already has access to this kid')
-        } else {
-          setMessage('Error sharing kid')
-        }
-        return
-      }
+      // Add shared kid entry
+      await addDoc(collection(db, 'sharedKids'), {
+        kidId: kid.id,
+        userId: userId,
+        sharedBy: 'current-user',
+        createdAt: new Date(),
+      })
 
       setMessage(`Successfully shared ${kid.name} with ${email}`)
       setEmail('')

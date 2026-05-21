@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { useAuth } from './lib/auth'
 import { KidsList } from './components/KidsList'
 import { ActivitiesList } from './components/ActivitiesList'
+import { LoginPage } from './components/LoginPage'
 
 function App() {
   const { user, loading, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState<'kids' | 'activities'>('kids')
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>
+
+  if (!user) return <LoginPage />
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,39 +31,32 @@ function App() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {user ? (
-          <div>
-            <div className="flex gap-4 mb-6 border-b">
-              <button
-                onClick={() => setActiveTab('kids')}
-                className={`px-4 py-2 font-medium ${
-                  activeTab === 'kids'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Kids
-              </button>
-              <button
-                onClick={() => setActiveTab('activities')}
-                className={`px-4 py-2 font-medium ${
-                  activeTab === 'activities'
-                    ? 'border-b-2 border-blue-500 text-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Activities
-              </button>
-            </div>
-            {activeTab === 'kids' && <KidsList />}
-            {activeTab === 'activities' && <ActivitiesList />}
+        <div>
+          <div className="flex gap-4 mb-6 border-b">
+            <button
+              onClick={() => setActiveTab('kids')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'kids'
+                  ? 'border-b-2 border-blue-500 text-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Kids
+            </button>
+            <button
+              onClick={() => setActiveTab('activities')}
+              className={`px-4 py-2 font-medium ${
+                activeTab === 'activities'
+                  ? 'border-b-2 border-blue-500 text-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Activities
+            </button>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">Please sign in to continue.</p>
-            <p className="text-sm text-gray-500">Use Supabase authentication to get started.</p>
-          </div>
-        )}
+          {activeTab === 'kids' && <KidsList />}
+          {activeTab === 'activities' && <ActivitiesList />}
+        </div>
       </main>
     </div>
   )
