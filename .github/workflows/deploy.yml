@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"      # ← Change from 18 to 20 or 22
+          node-version: "20"
           cache: npm
       - run: npm ci
       - run: npm run build
