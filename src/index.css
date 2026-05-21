@@ -57,31 +57,23 @@
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 rounded-sm font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow hover:opacity-90 transition-opacity;
+    @apply px-4 py-2 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow hover:opacity-90 transition-opacity;
   }
 
   .btn-secondary {
-    @apply px-2 py-1 rounded-sm font-medium text-ink-black bg-transparent border border-graphite-grey hover:bg-canvas-sand transition-colors;
+    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent border border-graphite-grey hover:bg-canvas-sand transition-colors;
   }
 
   .btn-ghost {
-    @apply px-2 py-1 rounded-sm font-medium text-ink-black bg-transparent hover:bg-canvas-sand transition-colors;
+    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent hover:bg-canvas-sand transition-colors;
   }
 
   .card {
-    @apply bg-surface-white rounded-sm border border-pale-granite;
-  }
-
-  .section {
-    @apply py-12 px-6;
-  }
-
-  .section-alt {
-    @apply py-12 px-6 bg-canvas-sand;
+    @apply bg-surface-white rounded border border-pale-granite;
   }
 
   .input {
-    @apply w-full px-3 py-2 rounded-sm border border-graphite-grey bg-surface-white text-charcoal-black placeholder-faded-grey focus:outline-none focus:ring-2 focus:ring-sky-blue;
+    @apply w-full px-3 py-2 rounded border border-graphite-grey bg-surface-white text-charcoal-black placeholder-faded-grey focus:outline-none focus:ring-2 focus:ring-sky-blue;
   }
 
   .label {

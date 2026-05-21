@@ -56,22 +56,16 @@ function escapeICS(text: string): string {
 }
 
 export function downloadICS(ics: string, filename: string = 'activities.ics') {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  
-  if (isIOS) {
-    // For iOS, create a data URL and open it
-    const dataUrl = 'data:text/calendar;base64,' + btoa(ics)
-    window.location.href = dataUrl
-  } else {
-    // For other devices, download as file
-    const blob = new Blob([ics], { type: 'text/calendar' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  setTimeout(() => {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
-  }
+  }, 100)
 }
