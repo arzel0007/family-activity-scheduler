@@ -30,10 +30,21 @@ export async function saveActivitiesToCache(activities: any[]) {
   if (!db) await initIndexedDB()
   const transaction = db.transaction([ACTIVITIES_STORE], 'readwrite')
   const store = transaction.objectStore(ACTIVITIES_STORE)
-  
-  for (const activity of activities) {
-    store.put(activity)
-  }
+
+  return new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => {
+      console.log('saveActivitiesToCache: transaction complete', activities.length)
+      resolve()
+    }
+    transaction.onerror = () => {
+      console.error('saveActivitiesToCache: transaction error', transaction.error)
+      reject(transaction.error)
+    }
+
+    for (const activity of activities) {
+      store.put(activity)
+    }
+  })
 }
 
 export async function getCachedActivities(): Promise<any[]> {
@@ -44,7 +55,10 @@ export async function getCachedActivities(): Promise<any[]> {
     const request = store.getAll()
 
     request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
+    request.onsuccess = () => {
+      console.log('getCachedActivities: loaded', (request.result || []).length)
+      resolve(request.result)
+    }
   })
 }
 
@@ -52,10 +66,21 @@ export async function saveKidsToCache(kids: any[]) {
   if (!db) await initIndexedDB()
   const transaction = db.transaction([KIDS_STORE], 'readwrite')
   const store = transaction.objectStore(KIDS_STORE)
-  
-  for (const kid of kids) {
-    store.put(kid)
-  }
+
+  return new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => {
+      console.log('saveKidsToCache: transaction complete', kids.length)
+      resolve()
+    }
+    transaction.onerror = () => {
+      console.error('saveKidsToCache: transaction error', transaction.error)
+      reject(transaction.error)
+    }
+
+    for (const kid of kids) {
+      store.put(kid)
+    }
+  })
 }
 
 export async function getCachedKids(): Promise<any[]> {
@@ -66,6 +91,9 @@ export async function getCachedKids(): Promise<any[]> {
     const request = store.getAll()
 
     request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
+    request.onsuccess = () => {
+      console.log('getCachedKids: loaded', (request.result || []).length)
+      resolve(request.result)
+    }
   })
 }

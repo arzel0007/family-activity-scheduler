@@ -6,6 +6,7 @@ import { Modal } from './Modal'
 import { Avatar } from './Avatar'
 import { PhotoUpload } from './PhotoUpload'
 import { uploadProfilePhoto, kidPhotoPath, photoUploadSuccessMessage } from '../lib/storage'
+import { saveKidsToCache } from '../lib/offlineCache'
 import { useToast } from '../lib/toast'
 import type { Kid } from '../lib/types'
 
@@ -81,11 +82,18 @@ export function KidsList() {
         await updateDoc(doc(db, 'kids', editingId), payload)
         addToast({ message: `${formData.name} updated`, type: 'success' })
       } else {
-        await addDoc(collection(db, 'kids'), {
+        const docRef = await addDoc(collection(db, 'kids'), {
           userId: auth.currentUser.uid,
           ...payload,
           createdAt: new Date(),
         })
+        // Save to IndexedDB for offline access
+        await saveKidsToCache([{
+          id: docRef.id,
+          userId: auth.currentUser.uid,
+          ...payload,
+          createdAt: new Date(),
+        }]).catch(err => console.error('Failed to cache kid:', err))
         addToast({ message: `${formData.name} added`, type: 'success' })
       }
 
