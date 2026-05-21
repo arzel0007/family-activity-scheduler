@@ -17,13 +17,13 @@ export function LoginPage() {
     try {
       if (isSignUp) {
         await signUp(email, password)
-        addToast('Account created successfully', 'success')
+        addToast({ message: 'Account created successfully', type: 'success' })
       } else {
         await signIn(email, password)
-        addToast('Signed in successfully', 'success')
+        addToast({ message: 'Signed in successfully', type: 'success' })
       }
     } catch (err: any) {
-      addToast(err.message || 'Authentication failed', 'error')
+      addToast({ message: err.message || 'Authentication failed', type: 'error' })
     } finally {
       setLoading(false)
     }

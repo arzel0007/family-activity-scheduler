@@ -19,6 +19,8 @@ export function KidsList() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [shareKid, setShareKid] = useState<Kid | null>(null)
   const [deleteKid, setDeleteKid] = useState<Kid | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState({ name: '', age: '' })
 
   useEffect(() => {
@@ -39,15 +41,16 @@ export function KidsList() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.name.trim() || !auth.currentUser) return
+    if (!formData.name.trim() || !auth.currentUser || submitting) return
 
+    setSubmitting(true)
     try {
       if (editingId) {
         await updateDoc(doc(db, 'kids', editingId), {
           name: formData.name,
           age: parseInt(formData.age) || null,
         })
-        addToast(`${formData.name} updated`, 'success')
+        addToast({ message: `${formData.name} updated`, type: 'success' })
       } else {
         await addDoc(collection(db, 'kids'), {
           userId: auth.currentUser.uid,
@@ -55,26 +58,32 @@ export function KidsList() {
           age: parseInt(formData.age) || null,
           createdAt: new Date(),
         })
-        addToast(`${formData.name} added`, 'success')
+        addToast({ message: `${formData.name} added`, type: 'success' })
       }
 
       setFormData({ name: '', age: '' })
       setEditingId(null)
       setShowForm(false)
     } catch (err) {
-      addToast('Error saving kid', 'error')
+      addToast({ message: 'Error saving kid', type: 'error' })
       console.error('Error saving kid:', err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
   async function handleDelete(id: string) {
+    if (deleting) return
+    setDeleting(true)
     try {
       await deleteDoc(doc(db, 'kids', id))
-      addToast('Kid deleted', 'success')
+      addToast({ message: 'Kid deleted', type: 'success' })
       setDeleteKid(null)
     } catch (err) {
-      addToast('Error deleting kid', 'error')
+      addToast({ message: 'Error deleting kid', type: 'error' })
       console.error('Error deleting kid:', err)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -127,9 +136,10 @@ export function KidsList() {
           </div>
           <button
             type="submit"
-            className="w-full btn-primary"
+            disabled={submitting}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editingId ? 'Update' : 'Add'}
+            {submitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
           </button>
         </form>
       )}
@@ -156,9 +166,10 @@ export function KidsList() {
               </button>
               <button
                 onClick={() => setDeleteKid(kid)}
-                className="btn-secondary text-sm"
+                disabled={deleting}
+                className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
@@ -180,12 +191,13 @@ export function KidsList() {
       <Modal
         isOpen={!!deleteKid}
         title="Delete Kid"
-        onClose={() => setDeleteKid(null)}
+        onClose={() => !deleting && setDeleteKid(null)}
         actions={[
           {
-            label: 'Delete',
+            label: deleting ? 'Deleting...' : 'Delete',
             onClick: () => deleteKid && handleDelete(deleteKid.id),
             variant: 'primary',
+            disabled: deleting,
           },
         ]}
       >

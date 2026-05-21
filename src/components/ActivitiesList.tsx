@@ -32,7 +32,15 @@ interface Activity {
   notes: Note[]
 }
 
-export function ActivitiesList() {
+export function ActivitiesList({
+  onActivitiesChange,
+  onKidsChange,
+  onTagsChange
+}: {
+  onActivitiesChange?: (activities: Activity[]) => void
+  onKidsChange?: (kids: Kid[]) => void
+  onTagsChange?: (tags: Tag[]) => void
+} = {}) {
   const { addToast } = useToast()
   const [activities, setActivities] = useState<Activity[]>([])
   const [kids, setKids] = useState<Kid[]>([])
@@ -45,12 +53,26 @@ export function ActivitiesList() {
   const [expandedActivity, setExpandedActivity] = useState<string | null>(null)
   const [newNote, setNewNote] = useState('')
   const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     dueDate: '',
     dueTime: '',
   })
+
+  useEffect(() => {
+    onActivitiesChange?.(activities)
+  }, [activities, onActivitiesChange])
+
+  useEffect(() => {
+    onKidsChange?.(kids)
+  }, [kids, onKidsChange])
+
+  useEffect(() => {
+    onTagsChange?.(tags)
+  }, [tags, onTagsChange])
 
   useEffect(() => {
     if (!auth.currentUser) return
@@ -88,8 +110,9 @@ export function ActivitiesList() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!formData.title.trim() || selectedKids.length === 0 || !auth.currentUser) return
+    if (!formData.title.trim() || selectedKids.length === 0 || !auth.currentUser || submitting) return
 
+    setSubmitting(true)
     try {
       if (editingId) {
         await updateDoc(doc(db, 'activities', editingId), {
@@ -100,7 +123,7 @@ export function ActivitiesList() {
           kidIds: selectedKids,
           tagIds: selectedTags,
         })
-        addToast('Activity updated', 'success')
+        addToast({ message: 'Activity updated', type: 'success' })
       } else {
         await addDoc(collection(db, 'activities'), {
           userId: auth.currentUser.uid,
@@ -113,13 +136,15 @@ export function ActivitiesList() {
           notes: [],
           createdAt: new Date(),
         })
-        addToast('Activity created', 'success')
+        addToast({ message: 'Activity created', type: 'success' })
       }
 
       resetForm()
     } catch (err) {
-      addToast('Error saving activity', 'error')
+      addToast({ message: 'Error saving activity', type: 'error' })
       console.error('Error saving activity:', err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -132,10 +157,10 @@ export function ActivitiesList() {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: [...(activity.notes || []), { id: Date.now().toString(), content: newNote }],
       })
-      addToast('Note added', 'success')
+      addToast({ message: 'Note added', type: 'success' })
       setNewNote('')
     } catch (err) {
-      addToast('Error adding note', 'error')
+      addToast({ message: 'Error adding note', type: 'error' })
       console.error('Error adding note:', err)
     }
   }
@@ -148,21 +173,25 @@ export function ActivitiesList() {
       await updateDoc(doc(db, 'activities', activityId), {
         notes: activity.notes.filter((n) => n.id !== noteId),
       })
-      addToast('Note deleted', 'success')
+      addToast({ message: 'Note deleted', type: 'success' })
     } catch (err) {
-      addToast('Error deleting note', 'error')
+      addToast({ message: 'Error deleting note', type: 'error' })
       console.error('Error deleting note:', err)
     }
   }
 
   async function handleDelete(id: string) {
+    if (deleting) return
+    setDeleting(true)
     try {
       await deleteDoc(doc(db, 'activities', id))
-      addToast('Activity deleted', 'success')
+      addToast({ message: 'Activity deleted', type: 'success' })
       setDeleteActivityId(null)
     } catch (err) {
-      addToast('Error deleting activity', 'error')
+      addToast({ message: 'Error deleting activity', type: 'error' })
       console.error('Error deleting activity:', err)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -182,7 +211,7 @@ export function ActivitiesList() {
   function handleExport() {
     const ics = generateICS(activities, kids)
     downloadICS(ics, `activities-${new Date().toISOString().split('T')[0]}.ics`)
-    addToast('Calendar exported', 'success')
+    addToast({ message: 'Calendar exported', type: 'success' })
   }
 
   function resetForm() {
@@ -310,9 +339,10 @@ export function ActivitiesList() {
           </div>
           <button
             type="submit"
-            className="w-full btn-primary"
+            disabled={submitting}
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {editingId ? 'Update' : 'Add'}
+            {submitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
           </button>
         </form>
       )}
@@ -414,12 +444,13 @@ export function ActivitiesList() {
       <Modal
         isOpen={!!deleteActivityId}
         title="Delete Activity"
-        onClose={() => setDeleteActivityId(null)}
+        onClose={() => !deleting && setDeleteActivityId(null)}
         actions={[
           {
-            label: 'Delete',
+            label: deleting ? 'Deleting...' : 'Delete',
             onClick: () => deleteActivityId && handleDelete(deleteActivityId),
             variant: 'primary',
+            disabled: deleting,
           },
         ]}
       >

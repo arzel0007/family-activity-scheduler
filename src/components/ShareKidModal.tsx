@@ -28,7 +28,7 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
       const snapshot = await getDocs(usersQuery)
 
       if (snapshot.empty) {
-        addToast('User not found', 'error')
+        addToast({ message: 'User not found', type: 'error' })
         setLoading(false)
         return
       }
@@ -42,11 +42,11 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
         createdAt: new Date(),
       })
 
-      addToast(`${kid.name} shared with ${email}`, 'success')
+      addToast({ message: `${kid.name} shared with ${email}`, type: 'success' })
       setEmail('')
       onShare()
     } catch (err) {
-      addToast('Error sharing kid', 'error')
+      addToast({ message: 'Error sharing kid', type: 'error' })
       console.error('Error sharing kid:', err)
     } finally {
       setLoading(false)

@@ -4,13 +4,14 @@ export type ToastType = 'success' | 'error' | 'info'
 
 interface Toast {
   id: string
+  title?: string
   message: string
   type: ToastType
 }
 
 interface ToastContextType {
   toasts: Toast[]
-  addToast: (message: string, type: ToastType) => void
+  addToast: (toast: { title?: string; message: string; type: ToastType }) => void
   removeToast: (id: string) => void
 }
 
@@ -19,9 +20,9 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined)
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = (message: string, type: ToastType) => {
+  const addToast = (toast: { title?: string; message: string; type: ToastType }) => {
     const id = Date.now().toString()
-    setToasts((prev) => [...prev, { id, message, type }])
+    setToasts((prev) => [...prev, { id, ...toast }])
     setTimeout(() => removeToast(id), 3000)
   }
 
@@ -44,6 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   : 'bg-sky-blue'
             }`}
           >
+            {toast.title && <div className="font-bold">{toast.title}</div>}
             {toast.message}
           </div>
         ))}

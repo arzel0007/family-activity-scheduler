@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: 'AIzaSyDYUIRHyvdLtbQK0GuL4pUEz1FHLD3LrBw',
   authDomain: 'family-activity-scheduler.firebaseapp.com',
   projectId: 'family-activity-scheduler',
