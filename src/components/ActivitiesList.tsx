@@ -201,15 +201,15 @@ export function ActivitiesList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <h2 className="text-2xl font-bold text-charcoal-black">Activities</h2>
-        <div className="space-x-2 flex">
+        <div className="space-x-2 flex flex-wrap">
           {activities.length > 0 && (
             <button
               onClick={handleExport}
-              className="btn-primary"
+              className="btn-primary text-sm px-3 py-2"
             >
-              Export to Calendar
+              Export
             </button>
           )}
           <button
@@ -217,9 +217,9 @@ export function ActivitiesList() {
               if (showForm) resetForm()
               else setShowForm(true)
             }}
-            className="btn-primary"
+            className="btn-primary text-sm px-3 py-2"
           >
-            {showForm ? 'Cancel' : 'Add Activity'}
+            {showForm ? 'Cancel' : 'Add'}
           </button>
         </div>
       </div>
