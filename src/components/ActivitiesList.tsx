@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { generateICS, downloadICS } from '../lib/ics'
+import { Modal } from './Modal'
 import { useToast } from '../lib/toast'
 
 interface Kid {
@@ -43,6 +44,7 @@ export function ActivitiesList() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [expandedActivity, setExpandedActivity] = useState<string | null>(null)
   const [newNote, setNewNote] = useState('')
+  const [deleteActivityId, setDeleteActivityId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -157,6 +159,7 @@ export function ActivitiesList() {
     try {
       await deleteDoc(doc(db, 'activities', id))
       addToast('Activity deleted', 'success')
+      setDeleteActivityId(null)
     } catch (err) {
       addToast('Error deleting activity', 'error')
       console.error('Error deleting activity:', err)
@@ -334,7 +337,7 @@ export function ActivitiesList() {
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(activity.id)}
+                  onClick={() => setDeleteActivityId(activity.id)}
                   className="btn-secondary text-sm"
                 >
                   Delete
@@ -411,6 +414,21 @@ export function ActivitiesList() {
       {activities.length === 0 && !showForm && (
         <p className="text-graphite-grey text-center py-8">No activities yet. Click "Add Activity" to get started!</p>
       )}
+
+      <Modal
+        isOpen={!!deleteActivityId}
+        title="Delete Activity"
+        onClose={() => setDeleteActivityId(null)}
+        actions={[
+          {
+            label: 'Delete',
+            onClick: () => deleteActivityId && handleDelete(deleteActivityId),
+            variant: 'primary',
+          },
+        ]}
+      >
+        <p className="text-graphite-grey">Are you sure you want to delete this activity?</p>
+      </Modal>
     </div>
   )
 }

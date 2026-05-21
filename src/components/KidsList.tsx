@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { db, auth } from '../lib/firebase'
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { ShareKidModal } from './ShareKidModal'
+import { Modal } from './Modal'
 import { useToast } from '../lib/toast'
 
 interface Kid {
@@ -17,6 +18,7 @@ export function KidsList() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [shareKid, setShareKid] = useState<Kid | null>(null)
+  const [deleteKid, setDeleteKid] = useState<Kid | null>(null)
   const [formData, setFormData] = useState({ name: '', age: '' })
 
   useEffect(() => {
@@ -69,6 +71,7 @@ export function KidsList() {
     try {
       await deleteDoc(doc(db, 'kids', id))
       addToast('Kid deleted', 'success')
+      setDeleteKid(null)
     } catch (err) {
       addToast('Error deleting kid', 'error')
       console.error('Error deleting kid:', err)
@@ -152,7 +155,7 @@ export function KidsList() {
                 Edit
               </button>
               <button
-                onClick={() => handleDelete(kid.id)}
+                onClick={() => setDeleteKid(kid)}
                 className="btn-secondary text-sm"
               >
                 Delete
@@ -173,6 +176,21 @@ export function KidsList() {
           onShare={() => setShareKid(null)}
         />
       )}
+
+      <Modal
+        isOpen={!!deleteKid}
+        title="Delete Kid"
+        onClose={() => setDeleteKid(null)}
+        actions={[
+          {
+            label: 'Delete',
+            onClick: () => deleteKid && handleDelete(deleteKid.id),
+            variant: 'primary',
+          },
+        ]}
+      >
+        <p className="text-graphite-grey">Are you sure you want to delete {deleteKid?.name}?</p>
+      </Modal>
     </div>
   )
 }
