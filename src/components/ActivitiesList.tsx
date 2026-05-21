@@ -180,11 +180,7 @@ export function ActivitiesList() {
   }
 
   function handleExport() {
-    const exportActivities = activities.map((a) => ({
-      ...a,
-      activity_kids: a.kidIds.map((id) => ({ kid_id: id })),
-    }))
-    const ics = generateICS(exportActivities, kids)
+    const ics = generateICS(activities, kids)
     downloadICS(ics, `activities-${new Date().toISOString().split('T')[0]}.ics`)
     addToast('Calendar exported', 'success')
   }

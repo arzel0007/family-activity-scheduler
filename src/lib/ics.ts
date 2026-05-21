@@ -21,13 +21,13 @@ END:VTIMEZONE
 `
 
   activities.forEach((activity) => {
-    const kidNames = activity.activity_kids
-      .map((ak: any) => kids.find((k: any) => k.id === ak.kid_id)?.name)
+    const kidNames = (activity.kidIds || [])
+      .map((id: string) => kids.find((k: any) => k.id === id)?.name)
       .filter(Boolean)
       .join(', ')
 
-    const dtstart = activity.due_date
-      ? `${activity.due_date.replace(/-/g, '')}${activity.due_time ? `T${activity.due_time.replace(/:/g, '')}00` : 'T000000'}`
+    const dtstart = activity.dueDate
+      ? `${activity.dueDate.replace(/-/g, '')}${activity.dueTime ? `T${activity.dueTime.replace(/:/g, '')}00` : 'T000000'}`
       : timestamp
 
     const uid = `${activity.id}@familyactivityscheduler.local`
