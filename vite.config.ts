@@ -16,6 +16,7 @@ export default defineConfig({
         short_name: 'Activity Scheduler',
         description: 'Manage kids activities and schedules',
         theme_color: '#ffffff',
+        icons: [],
       },
     }),
   ],
