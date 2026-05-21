@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20        # ← Change this to 20 or 18
+          node-version: "18"      # ← Explicitly set as string
           cache: npm
       - run: npm ci
       - run: npm run build
