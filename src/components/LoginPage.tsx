@@ -28,48 +28,54 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-        <h1 className="text-3xl font-bold text-center mb-8">Family Activity Scheduler</h1>
+    <div className="min-h-screen bg-surface-white flex items-center justify-center">
+      <div className="bg-canvas-sand p-8 rounded-md border border-pale-granite max-w-md w-full">
+        <h1 className="text-3xl font-bold text-center mb-8 text-charcoal-black">Family Activity Scheduler</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+          <div>
+            <label className="label">Email</label>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+              required
+            />
+          </div>
+          <div>
+            <label className="label">Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+              required
+            />
+          </div>
 
-          {error && <p className="text-red-600 text-sm">{error}</p>}
+          {error && <p className="text-sunset-orange text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium"
+            className="w-full btn-primary disabled:opacity-50"
           >
             {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-graphite-grey text-sm">
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp)
                 setError('')
               }}
-              className="text-blue-500 hover:underline ml-2"
+              className="text-sky-blue hover:underline ml-2 font-medium"
             >
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>

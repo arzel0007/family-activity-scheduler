@@ -182,17 +182,17 @@ export function ActivitiesList() {
     setShowForm(false)
   }
 
-  if (loading) return <div>Loading activities...</div>
+  if (loading) return <div className="text-graphite-grey">Loading activities...</div>
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Activities</h2>
-        <div className="space-x-2">
+        <h2 className="text-2xl font-bold text-charcoal-black">Activities</h2>
+        <div className="space-x-2 flex">
           {activities.length > 0 && (
             <button
               onClick={handleExport}
-              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+              className="btn-primary"
             >
               Export to Calendar
             </button>
@@ -202,7 +202,7 @@ export function ActivitiesList() {
               if (showForm) resetForm()
               else setShowForm(true)
             }}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="btn-primary"
           >
             {showForm ? 'Cancel' : 'Add Activity'}
           </button>
@@ -210,41 +210,53 @@ export function ActivitiesList() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow space-y-3">
-          <input
-            type="text"
-            placeholder="Activity title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-          <textarea
-            placeholder="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            rows={3}
-          />
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="bg-canvas-sand p-6 rounded-md border border-pale-granite space-y-4">
+          <div>
+            <label className="label">Activity Title</label>
             <input
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="px-3 py-2 border rounded"
-            />
-            <input
-              type="time"
-              value={formData.dueTime}
-              onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
-              className="px-3 py-2 border rounded"
+              type="text"
+              placeholder="Enter activity title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="input"
+              required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Select Kids</label>
+            <label className="label">Description</label>
+            <textarea
+              placeholder="Enter description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="input"
+              rows={3}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Due Date</label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label">Due Time</label>
+              <input
+                type="time"
+                value={formData.dueTime}
+                onChange={(e) => setFormData({ ...formData, dueTime: e.target.value })}
+                className="input"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="label">Select Kids</label>
             <div className="space-y-2">
               {kids.map((kid) => (
-                <label key={kid.id} className="flex items-center">
+                <label key={kid.id} className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedKids.includes(kid.id)}
@@ -255,18 +267,18 @@ export function ActivitiesList() {
                         setSelectedKids(selectedKids.filter((id) => id !== kid.id))
                       }
                     }}
-                    className="mr-2"
+                    className="mr-2 w-4 h-4"
                   />
-                  {kid.name}
+                  <span className="text-charcoal-black">{kid.name}</span>
                 </label>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Tags</label>
+            <label className="label">Tags</label>
             <div className="space-y-2">
               {tags.map((tag) => (
-                <label key={tag.id} className="flex items-center">
+                <label key={tag.id} className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedTags.includes(tag.id)}
@@ -277,65 +289,67 @@ export function ActivitiesList() {
                         setSelectedTags(selectedTags.filter((id) => id !== tag.id))
                       }
                     }}
-                    className="mr-2"
+                    className="mr-2 w-4 h-4"
                   />
                   <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: tag.color }} />
-                  {tag.name}
+                  <span className="text-charcoal-black">{tag.name}</span>
                 </label>
               ))}
             </div>
           </div>
           <button
             type="submit"
-            className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+            className="w-full btn-primary"
           >
             {editingId ? 'Update' : 'Add'}
           </button>
         </form>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {activities.map((activity) => (
-          <div key={activity.id} className="bg-white p-4 rounded shadow">
-            <div className="flex justify-between items-start mb-2">
+          <div key={activity.id} className="card p-4">
+            <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{activity.title}</h3>
-                {activity.description && <p className="text-sm text-gray-600">{activity.description}</p>}
+                <h3 className="font-semibold text-lg text-charcoal-black">{activity.title}</h3>
+                {activity.description && <p className="text-sm text-graphite-grey">{activity.description}</p>}
               </div>
-              <div className="space-x-2">
+              <div className="space-x-2 flex">
                 <button
                   onClick={() => handleEdit(activity)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                  className="btn-secondary text-sm"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(activity.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  className="btn-secondary text-sm"
                 >
                   Delete
                 </button>
               </div>
             </div>
-            <div className="text-sm text-gray-500 mb-2">
+            <div className="text-sm text-graphite-grey mb-2">
               {activity.dueDate && <span>{activity.dueDate}</span>}
               {activity.dueTime && <span> at {activity.dueTime}</span>}
             </div>
             <div className="mt-2 text-sm mb-2">
-              <span className="font-medium">Kids: </span>
-              {activity.kidIds.length > 0
-                ? activity.kidIds
-                    .map((id) => kids.find((k) => k.id === id)?.name)
-                    .filter(Boolean)
-                    .join(', ')
-                : 'No kids assigned'}
+              <span className="font-medium text-charcoal-black">Kids: </span>
+              <span className="text-graphite-grey">
+                {activity.kidIds.length > 0
+                  ? activity.kidIds
+                      .map((id) => kids.find((k) => k.id === id)?.name)
+                      .filter(Boolean)
+                      .join(', ')
+                  : 'No kids assigned'}
+              </span>
             </div>
             {activity.tagIds.length > 0 && (
               <div className="flex gap-2 mb-2">
                 {activity.tagIds.map((tagId) => {
                   const tag = tags.find((t) => t.id === tagId)
                   return tag ? (
-                    <span key={tag.id} className="px-2 py-1 rounded text-xs text-white" style={{ backgroundColor: tag.color }}>
+                    <span key={tag.id} className="px-2 py-1 rounded text-xs text-ink-black" style={{ backgroundColor: tag.color }}>
                       {tag.name}
                     </span>
                   ) : null
@@ -344,18 +358,18 @@ export function ActivitiesList() {
             )}
             <button
               onClick={() => setExpandedActivity(expandedActivity === activity.id ? null : activity.id)}
-              className="text-blue-500 text-sm hover:underline"
+              className="text-sky-blue text-sm hover:underline font-medium"
             >
               {expandedActivity === activity.id ? 'Hide' : 'Show'} Notes ({activity.notes.length})
             </button>
             {expandedActivity === activity.id && (
-              <div className="mt-3 space-y-2 border-t pt-3">
+              <div className="mt-3 space-y-2 border-t border-pale-granite pt-3">
                 {activity.notes.map((note) => (
-                  <div key={note.id} className="bg-gray-50 p-2 rounded flex justify-between items-start">
-                    <p className="text-sm">{note.content}</p>
+                  <div key={note.id} className="bg-canvas-sand p-2 rounded flex justify-between items-start">
+                    <p className="text-sm text-charcoal-black">{note.content}</p>
                     <button
                       onClick={() => handleDeleteNote(activity.id, note.id)}
-                      className="text-red-500 text-xs hover:underline"
+                      className="text-sunset-orange text-xs hover:underline"
                     >
                       Delete
                     </button>
@@ -367,11 +381,11 @@ export function ActivitiesList() {
                     placeholder="Add a note..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
-                    className="flex-1 px-2 py-1 border rounded text-sm"
+                    className="flex-1 px-2 py-1 border border-graphite-grey rounded text-sm bg-surface-white text-charcoal-black"
                   />
                   <button
                     onClick={() => handleAddNote(activity.id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                    className="btn-primary text-sm"
                   >
                     Add
                   </button>
@@ -383,7 +397,7 @@ export function ActivitiesList() {
       </div>
 
       {activities.length === 0 && !showForm && (
-        <p className="text-gray-500 text-center py-8">No activities yet. Click "Add Activity" to get started!</p>
+        <p className="text-graphite-grey text-center py-8">No activities yet. Click "Add Activity" to get started!</p>
       )}
     </div>
   )

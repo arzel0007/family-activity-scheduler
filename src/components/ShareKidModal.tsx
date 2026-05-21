@@ -55,19 +55,22 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded shadow-lg max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Share {kid.name}</h2>
-        <div className="space-y-3">
-          <input
-            type="email"
-            placeholder="Parent email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-          />
+    <div className="fixed inset-0 bg-ink-black bg-opacity-25 flex items-center justify-center">
+      <div className="bg-surface-white p-6 rounded-md border border-pale-granite shadow-xl max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4 text-charcoal-black">Share {kid.name}</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="label">Parent Email</label>
+            <input
+              type="email"
+              placeholder="parent@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+            />
+          </div>
           {message && (
-            <p className={`text-sm ${message.includes('Successfully') ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm ${message.includes('Successfully') ? 'text-vivid-green' : 'text-sunset-orange'}`}>
               {message}
             </p>
           )}
@@ -75,13 +78,13 @@ export function ShareKidModal({ kid, onClose, onShare }: Props) {
             <button
               onClick={handleShare}
               disabled={loading}
-              className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+              className="flex-1 btn-primary disabled:opacity-50"
             >
               {loading ? 'Sharing...' : 'Share'}
             </button>
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-300 text-gray-800 py-2 rounded hover:bg-gray-400"
+              className="flex-1 btn-secondary"
             >
               Close
             </button>

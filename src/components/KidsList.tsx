@@ -74,73 +74,79 @@ export function KidsList() {
     setShowForm(true)
   }
 
-  if (loading) return <div>Loading kids...</div>
+  if (loading) return <div className="text-graphite-grey">Loading kids...</div>
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Kids</h2>
+        <h2 className="text-2xl font-bold text-charcoal-black">Kids</h2>
         <button
           onClick={() => {
             setShowForm(!showForm)
             setEditingId(null)
             setFormData({ name: '', age: '' })
           }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="btn-primary"
         >
           {showForm ? 'Cancel' : 'Add Kid'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow space-y-3">
-          <input
-            type="text"
-            placeholder="Kid's name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-          <input
-            type="number"
-            placeholder="Age"
-            value={formData.age}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-            className="w-full px-3 py-2 border rounded"
-          />
+        <form onSubmit={handleSubmit} className="bg-canvas-sand p-6 rounded-md border border-pale-granite space-y-4">
+          <div>
+            <label className="label">Kid's Name</label>
+            <input
+              type="text"
+              placeholder="Enter name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="input"
+              required
+            />
+          </div>
+          <div>
+            <label className="label">Age</label>
+            <input
+              type="number"
+              placeholder="Enter age"
+              value={formData.age}
+              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+              className="input"
+            />
+          </div>
           <button
             type="submit"
-            className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
+            className="w-full btn-primary"
           >
             {editingId ? 'Update' : 'Add'}
           </button>
         </form>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {kids.map((kid) => (
-          <div key={kid.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
+          <div key={kid.id} className="card p-4 flex justify-between items-center">
             <div>
-              <h3 className="font-semibold">{kid.name}</h3>
-              {kid.age && <p className="text-sm text-gray-600">Age: {kid.age}</p>}
+              <h3 className="font-semibold text-charcoal-black">{kid.name}</h3>
+              {kid.age && <p className="text-sm text-graphite-grey">Age: {kid.age}</p>}
             </div>
-            <div className="space-x-2">
+            <div className="space-x-2 flex">
               <button
                 onClick={() => setShareKid(kid)}
-                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                className="btn-secondary text-sm"
               >
                 Share
               </button>
               <button
                 onClick={() => handleEdit(kid)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                className="btn-secondary text-sm"
               >
                 Edit
               </button>
               <button
                 onClick={() => handleDelete(kid.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                className="btn-secondary text-sm"
               >
                 Delete
               </button>
@@ -150,7 +156,7 @@ export function KidsList() {
       </div>
 
       {kids.length === 0 && !showForm && (
-        <p className="text-gray-500 text-center py-8">No kids added yet. Click "Add Kid" to get started!</p>
+        <p className="text-graphite-grey text-center py-8">No kids added yet. Click "Add Kid" to get started!</p>
       )}
 
       {shareKid && (
