@@ -15,15 +15,15 @@ function App() {
   return (
     <div className="min-h-screen bg-surface-white">
       <header className="bg-surface-white border-b border-pale-granite">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
-          <div>
+        <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center gap-4">
+          <div className="flex-1">
             <h1 className="text-3xl font-bold text-charcoal-black">Family Activity Scheduler</h1>
             {user && <p className="text-sm text-graphite-grey">Logged in as {user.email}</p>}
           </div>
           {user && (
             <button
               onClick={signOut}
-              className="btn-secondary"
+              className="btn-secondary whitespace-nowrap"
             >
               Sign Out
             </button>
