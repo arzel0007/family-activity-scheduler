@@ -16,6 +16,11 @@ export interface UserProfile {
   displayName?: string
   photoURL?: string
   role?: 'parent' | 'super_admin' | 'disabled'
+  spouse?: {
+    id: string
+    email: string
+    linkedAt?: any
+  }
   updatedAt?: Date
   createdAt?: Date
 }
