@@ -559,3 +559,316 @@
     @apply bg-graphite-grey;
   }
 }
+
+/* Accessibility utilities */
+@layer components {
+  /* Screen reader only (sr-only) - hide visually but not from screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Enhanced focus indicators for accessibility */
+  @media (prefers-reduced-motion: no-preference) {
+    *:focus-visible {
+      outline: 3px solid var(--color-sky-blue);
+      outline-offset: 2px;
+    }
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid var(--color-sky-blue);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Keyboard focus for tabs */
+  .ph-tab:focus-visible {
+    outline: 2px solid var(--color-sky-blue);
+    outline-offset: -2px;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: more) {
+    button {
+      border-width: 2px;
+    }
+
+    input,
+    select,
+    textarea {
+      border-width: 2px;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Forced colors mode (Windows High Contrast) */
+  @media (forced-colors: active) {
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost,
+    .card,
+    .input {
+      forced-color-adjust: none;
+    }
+  }
+}
+
+/* Advanced animations and transitions */
+@layer components {
+  /* Fade animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .fade-in {
+    animation: fade-in 0.3s ease-in;
+  }
+
+  .fade-out {
+    animation: fade-out 0.3s ease-out;
+  }
+
+  /* Scale animations */
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .scale-in {
+    animation: scale-in 0.3s ease-in;
+  }
+
+  /* Bounce animation */
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .bounce-in {
+    animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Success animation */
+  @keyframes success-check {
+    0% {
+      transform: scale(0.5) rotate(-45deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+    }
+  }
+
+  .success-check {
+    animation: success-check 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Error shake animation */
+  @keyframes shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+      transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+      transform: translateX(5px);
+    }
+  }
+
+  .shake {
+    animation: shake 0.4s ease-in-out;
+  }
+
+  /* Pulse animation */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Slide animations */
+  @keyframes slide-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .slide-in-up {
+    animation: slide-in-up 0.3s ease-out;
+  }
+
+  .slide-in-down {
+    animation: slide-in-down 0.3s ease-out;
+  }
+
+  .slide-in-left {
+    animation: slide-in-left 0.3s ease-out;
+  }
+
+  .slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  /* Modal/Dialog entrance */
+  @keyframes modal-entrance {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .modal-entrance {
+    animation: modal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Smooth transitions for state changes */
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .transition-fast {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  .transition-slow {
+    @apply transition-all duration-500 ease-in-out;
+  }
+
+  /* Button press feedback */
+  button.press-feedback:active {
+    animation: pulse 0.2s ease-out;
+  }
+
+  /* Card hover animation */
+  .card-hover:hover {
+    @apply shadow-xl transition-shadow duration-300;
+  }
+
+  /* List item stagger animation */
+  .list-item {
+    animation: slide-in-up 0.4s ease-out backwards;
+  }
+
+  .list-item:nth-child(1) { animation-delay: 0.1s; }
+  .list-item:nth-child(2) { animation-delay: 0.2s; }
+  .list-item:nth-child(3) { animation-delay: 0.3s; }
+  .list-item:nth-child(4) { animation-delay: 0.4s; }
+  .list-item:nth-child(5) { animation-delay: 0.5s; }
+  .list-item:nth-child(n+6) { animation-delay: 0.6s; }
+}
