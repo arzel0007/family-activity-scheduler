@@ -3,6 +3,7 @@ import { useAuth } from '../lib/auth'
 import { getUserProfile } from '../lib/userProfile'
 import { setupKeyboardShortcuts } from '../lib/keyboardShortcuts'
 import { UserMenu } from './UserMenu'
+import { ThemeToggle } from './ThemeToggle'
 
 interface HeaderProps {
   onAddActivity: () => void
@@ -50,6 +51,7 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
             </h1>
           </div>
           <div className="flex gap-2 items-center">
+            <ThemeToggle />
             <UserMenu
               displayName={profileName}
               photoURL={photoURL}
