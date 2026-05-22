@@ -42,7 +42,7 @@ export function setupIntersectionObserver(imageElements: HTMLImageElement[]) {
         if (img.dataset.src) {
           img.src = img.dataset.src
           if (img.dataset.srcset) {
-            img.srcSet = img.dataset.srcset
+            img.srcset = img.dataset.srcset
           }
           img.classList.add('loaded')
           observer.unobserve(img)

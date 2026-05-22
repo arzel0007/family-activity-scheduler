@@ -37,7 +37,6 @@ export function useNetworkStatus() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    const connection = (navigator as any).connection
     if (connection) {
       connection.addEventListener('change', handleConnectionChange)
     }

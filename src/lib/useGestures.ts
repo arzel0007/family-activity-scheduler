@@ -109,7 +109,7 @@ export function usePinch(element: React.RefObject<HTMLElement>, options: PinchOp
 }
 
 export function useLongPress(element: React.RefObject<HTMLElement>, callback: () => void, duration = 500) {
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleTouchStart = useCallback(() => {
     timeoutRef.current = setTimeout(callback, duration)
@@ -118,6 +118,7 @@ export function useLongPress(element: React.RefObject<HTMLElement>, callback: ()
   const handleTouchEnd = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
   }, [])
 
@@ -135,6 +136,7 @@ export function useLongPress(element: React.RefObject<HTMLElement>, callback: ()
       el.removeEventListener('touchmove', handleTouchEnd)
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
       }
     }
   }, [element, handleTouchStart, handleTouchEnd])
