@@ -38,6 +38,7 @@ export interface Activity {
   kidIds: string[]
   tagIds: string[]
   notes: { id: string; content: string }[]
+  todos?: { id: string; text: string; completed: boolean; createdAt: number }[]
   userId?: string
   ownerId?: string
   inviteeIds?: string[]

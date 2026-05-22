@@ -12,7 +12,8 @@ import { initTheme } from './lib/theme'
 import { initFCM, listenForMessages } from './lib/fcm'
 import { subscribeParentToNotifications } from './lib/notificationService'
 import { initIndexedDB } from './lib/offlineCache'
-import { exportActivitiesAndKids, importActivitiesAndKids } from './lib/importExport'
+import { generateICS, downloadICS } from './lib/ics'
+import { importActivitiesAndKids } from './lib/importExport'
 import { useToast } from './lib/toast'
 
 function App() {
@@ -57,8 +58,17 @@ function App() {
   }, [user, addToast])
 
   const handleExport = async () => {
-    await exportActivitiesAndKids(activities, kids)
-    addToast({ message: 'Data exported', type: 'success' })
+    if (activities.length === 0) {
+      addToast({ message: 'No activities to add to calendar', type: 'info' })
+      return
+    }
+    try {
+      const ics = generateICS(activities, kids)
+      downloadICS(ics, `family-activities-${new Date().toISOString().slice(0, 10)}.ics`)
+      addToast({ message: `${activities.length} activities added to calendar`, type: 'success' })
+    } catch (error) {
+      addToast({ message: 'Failed to add to calendar', type: 'error' })
+    }
   }
 
   const handleImport = async (file: File) => {

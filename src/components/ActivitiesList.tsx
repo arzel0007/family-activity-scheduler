@@ -270,6 +270,19 @@ export function ActivitiesList({
     addToast({ message: 'Calendar exported', type: 'success' })
   }
 
+  function handleExportActivity(activity: Activity) {
+    const ics = generateICS([activity], kids)
+    downloadICS(ics, `${activity.title.replace(/\s+/g, '-')}-${activity.dueDate || 'unscheduled'}.ics`)
+    addToast({ message: `"${activity.title}" added to calendar`, type: 'success' })
+    
+    // Notify invitees that activity was added to calendar
+    if (activity.invitees && activity.invitees.length > 0) {
+      import('../lib/notifications').then(({ notifyInvitees }) => {
+        notifyInvitees(activity.invitees, activity.title, 'added-to-calendar')
+      })
+    }
+  }
+
   function resetForm() {
     setFormData({ title: '', description: '', location: '', dueDate: '', dueTime: '' })
     setSelectedKids([])
@@ -457,7 +470,23 @@ export function ActivitiesList({
                     >
                       Delete
                     </button>
+                    <button
+                      onClick={() => handleExportActivity(activity)}
+                      className="btn-secondary text-sm"
+                      title="Add to calendar"
+                    >
+                      📅
+                    </button>
                   </div>
+                )}
+                {!owned && (
+                  <button
+                    onClick={() => handleExportActivity(activity)}
+                    className="btn-secondary text-sm shrink-0"
+                    title="Add to calendar"
+                  >
+                    📅
+                  </button>
                 )}
               </div>
               <div className="text-sm text-graphite-grey mb-2">

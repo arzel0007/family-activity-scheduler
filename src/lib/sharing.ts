@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { findUserByEmail } from './userProfile'
+import { notifyInvitees } from './notifications'
 import type { Kid, KidSnapshot, Invitee } from './types'
 
 export async function shareKidActivitiesWithParent(
@@ -81,6 +82,13 @@ export async function shareKidActivitiesWithParent(
     sharedBy: currentUser.uid,
     createdAt: serverTimestamp(),
   })
+
+  // Send notification about shared activities
+  await notifyInvitees(
+    [inviteeEntry],
+    `${toUpdate.length} activities for ${kid.name}`,
+    'shared'
+  )
 
   return { sharedCount: toUpdate.length, inviteeEmail: inviteeEntry.email }
 }
