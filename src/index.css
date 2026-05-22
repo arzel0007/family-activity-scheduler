@@ -3,6 +3,14 @@
 
 @import 'tailwindcss';
 
+/* Safe area variables for notch/home indicator support */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-right: env(safe-area-inset-right, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+  --safe-area-inset-left: env(safe-area-inset-left, 0);
+}
+
 @theme {
   --color-surface-white: #ffffff;
   --color-canvas-sand: #eeefe9;
@@ -39,6 +47,17 @@
     font-family: var(--font-ibm-plex-sans);
     letter-spacing: -0.025em;
     line-height: 1.43;
+    /* Improve font rendering across browsers */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent text size adjustment on mobile */
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    /* Safe area padding for notched devices */
+    padding-top: max(0px, var(--safe-area-inset-top));
+    padding-right: max(0px, var(--safe-area-inset-right));
+    padding-left: max(0px, var(--safe-area-inset-left));
   }
 
   h1,
@@ -81,19 +100,44 @@
     background: var(--gradient-dynamic);
   }
 
+  /* Enhanced buttons with touch-friendly sizing */
   .btn-primary {
-    @apply px-4 py-2.5 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow;
+    @apply px-4 py-3 md:py-2.5 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow;
     @apply hover:bg-sunset-orange hover:border-sunset-orange transition-colors;
+    /* Ensure minimum touch target size of 48x48 */
+    min-height: 48px;
+    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Prevent text selection on double tap */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Better tap feedback */
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
   }
 
   .btn-secondary {
-    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent border border-graphite-grey;
+    @apply px-3 py-2.5 md:py-1 rounded font-medium text-ink-black bg-transparent border border-graphite-grey;
     @apply hover:bg-pale-granite transition-colors;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
   }
 
   .btn-ghost {
-    @apply px-2 py-1 rounded font-medium text-ink-black bg-transparent;
+    @apply px-3 py-2.5 md:py-1 rounded font-medium text-ink-black bg-transparent;
     @apply hover:bg-warm-gray-tint transition-colors;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
   }
 
   .card {
@@ -101,24 +145,62 @@
     box-shadow: none;
   }
 
+  /* Enhanced form inputs with better mobile support */
   .input {
-    @apply w-full px-3 py-2 rounded border border-graphite-grey bg-surface-white text-charcoal-black;
+    @apply w-full px-3 py-3 md:py-2 rounded border border-graphite-grey bg-surface-white text-charcoal-black;
     @apply placeholder-faded-grey focus:outline-none focus:ring-2 focus:ring-sky-blue focus:border-sky-blue;
+    /* Prevent zoom on iOS input focus */
+    font-size: 16px;
+    min-height: 44px;
+    /* Better tap feedback */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    /* Keyboard appearance optimization */
+    -webkit-font-smoothing: antialiased;
+  }
+
+  input[type="date"],
+  input[type="time"],
+  input[type="number"],
+  input[type="email"],
+  select,
+  textarea {
+    font-size: 16px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23374151' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+    cursor: pointer;
   }
 
   .label {
     @apply block text-sm font-medium text-charcoal-black mb-2;
+    line-height: 1.5;
   }
 
-  /* PostHog tab navigation */
+  /* PostHog tab navigation with scroll support */
   .ph-tabs {
     @apply flex gap-2 border-b border-pale-granite;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   .ph-tab {
-    @apply px-3 py-2.5 font-medium text-faded-grey transition-colors;
+    @apply px-3 py-2.5 md:px-4 font-medium text-faded-grey transition-colors whitespace-nowrap;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .ph-tab:hover {
@@ -135,5 +217,100 @@
 
   .ph-badge-invitee {
     @apply text-xs px-2 py-0.5 rounded font-medium bg-pale-granite text-graphite-grey;
+  }
+
+  /* Loading skeleton animation */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #e5e7e0 0%,
+      #f0f0ea 50%,
+      #e5e7e0 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+  }
+
+  @keyframes skeleton-loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Empty state styling */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 px-6 text-center;
+  }
+
+  .empty-state-icon {
+    @apply text-5xl mb-4 opacity-50;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-semibold text-charcoal-black mb-2;
+  }
+
+  .empty-state-text {
+    @apply text-graphite-grey mb-6 max-w-sm;
+  }
+
+  /* Responsive grid for card layouts */
+  .card-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  @media (max-width: 640px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Better focus styles for accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--color-sky-blue);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--color-sky-blue);
+    outline-offset: 2px;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(47, 128, 250, 0.3);
+    border-top-color: #2f80fa;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Safe area padding support for notched devices */
+  @supports (padding: max(0px)) {
+    body {
+      padding-bottom: max(0px, var(--safe-area-inset-bottom));
+    }
+  }
+
+  /* Responsive spacing */
+  @media (max-width: 640px) {
+    main {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
   }
 }

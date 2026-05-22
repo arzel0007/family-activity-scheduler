@@ -7,6 +7,7 @@ import { Header } from './components/Header'
 import { SearchFilterModal } from './components/SearchFilterModal'
 import { RecurringActivityModal } from './components/RecurringActivityModal'
 import { AdminPanel } from './components/AdminPanel'
+import { LoadingScreen } from './components/LoadingScreen'
 import { initTheme } from './lib/theme'
 import { initFCM, listenForMessages } from './lib/fcm'
 import { subscribeParentToNotifications } from './lib/notificationService'
@@ -70,11 +71,7 @@ function App() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-canvas-sand text-graphite-grey">
-        Loading...
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   if (!user) return <LoginPage />
