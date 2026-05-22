@@ -5,6 +5,7 @@ import { ShareKidModal } from './ShareKidModal'
 import { Modal } from './Modal'
 import { Avatar } from './Avatar'
 import { PhotoUpload } from './PhotoUpload'
+import { SkeletonLoader } from './SkeletonLoader'
 import { uploadProfilePhoto, kidPhotoPath, photoUploadSuccessMessage } from '../lib/storage'
 import { saveKidsToCache } from '../lib/offlineCache'
 import { useToast } from '../lib/toast'
@@ -133,7 +134,7 @@ export function KidsList() {
     setShowForm(true)
   }
 
-  if (loading) return <div className="text-graphite-grey">Loading kids...</div>
+  if (loading) return <SkeletonLoader count={3} height="120px" className="space-y-4" />
 
   return (
     <div className="space-y-6">

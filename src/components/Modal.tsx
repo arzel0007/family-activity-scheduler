@@ -12,9 +12,9 @@ export function Modal({ isOpen, title, children, onClose, actions }: ModalProps)
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-ink-black bg-opacity-25 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-charcoal-black/20 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-surface-white p-6 rounded border border-pale-granite max-w-md w-full mx-4"
+        className="bg-surface-white p-6 md:p-8 rounded border border-pale-granite max-w-lg w-full mx-auto"
         style={{ boxShadow: 'var(--shadow-xl)' }}
       >
         <h2 className="text-xl font-bold mb-4 text-charcoal-black">{title}</h2>

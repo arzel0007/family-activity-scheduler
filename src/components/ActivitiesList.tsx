@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
 import { generateICS, downloadICS } from '../lib/ics'
 import { Modal } from './Modal'
 import { Avatar } from './Avatar'
+import { SkeletonLoader } from './SkeletonLoader'
 import { useToast } from '../lib/toast'
 import type { Activity, Kid, Invitee } from '../lib/types'
 
@@ -277,7 +278,7 @@ export function ActivitiesList({
     setShowForm(false)
   }
 
-  if (loading) return <div className="text-graphite-grey">Loading activities...</div>
+  if (loading) return <SkeletonLoader count={5} height="140px" className="space-y-4" />
 
   return (
     <div className="space-y-6">

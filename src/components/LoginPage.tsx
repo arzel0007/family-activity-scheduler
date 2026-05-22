@@ -17,14 +17,13 @@ export function LoginPage() {
     try {
       if (isSignUp) {
         await signUp(email, password)
-        addToast({ message: 'Account created successfully', type: 'success' })
+        // Don't show toast - let redirect to main app be the success feedback
       } else {
         await signIn(email, password)
-        addToast({ message: 'Signed in successfully', type: 'success' })
+        // Auth state will update via onAuthStateChanged, triggering redirect
       }
     } catch (err: any) {
       addToast({ message: err.message || 'Authentication failed', type: 'error' })
-    } finally {
       setLoading(false)
     }
   }

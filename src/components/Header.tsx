@@ -3,7 +3,6 @@ import { useAuth } from '../lib/auth'
 import { getUserProfile } from '../lib/userProfile'
 import { setupKeyboardShortcuts } from '../lib/keyboardShortcuts'
 import { UserMenu } from './UserMenu'
-import { ThemeToggle } from './ThemeToggle'
 
 interface HeaderProps {
   onAddActivity: () => void
@@ -41,7 +40,7 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
       <header className="bg-surface-white border-b border-pale-granite">
         <div className="max-w-[958px] mx-auto px-6 py-5 flex justify-between items-center gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-charcoal-black truncate tracking-tight flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl md:text-3xl font-bold text-charcoal-black tracking-tight flex items-center gap-2 flex-wrap">
               Family Activity Scheduler
               {isSuperAdmin && (
                 <span className="text-xs font-semibold px-2 py-0.5 rounded bg-marigold-yellow text-ink-black">
@@ -51,7 +50,6 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
             </h1>
           </div>
           <div className="flex gap-2 items-center">
-            <ThemeToggle />
             <UserMenu
               displayName={profileName}
               photoURL={photoURL}
@@ -66,8 +64,8 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
             <button onClick={onAddActivity} className="btn-primary" title="Add Activity (Cmd+K)">
               + Activity
             </button>
-            <button onClick={onExport} className="btn-secondary" title="Export (Cmd+E)">
-              ⬇️
+            <button onClick={onExport} className="btn-secondary" title="Add to calendar (Cmd+E)">
+              📅 Add to Calendar
             </button>
           </div>
         </div>
