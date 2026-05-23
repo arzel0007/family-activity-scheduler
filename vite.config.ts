@@ -3,13 +3,15 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/family-activity-scheduler/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Do not route Firebase reserved auth helper endpoints to index.html.
+        navigateFallbackDenylist: [/^\/__\//],
       },
       manifest: {
         name: 'Family Activity Scheduler',

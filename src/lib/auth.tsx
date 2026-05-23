@@ -1,8 +1,15 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import {
+  User,
+  GoogleAuthProvider,
+  browserLocalPersistence,
+  getRedirectResult,
+  setPersistence,
+  signInWithRedirect,
+} from 'firebase/auth'
 import { auth } from './firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { ensureUserProfile, getUserProfile, isAccountDisabled } from './userProfile'
+import { ensureUserProfile, getUserProfile } from './userProfile'
 import { isSuperAdminUser } from './admin'
 
 interface AuthContextType {
@@ -26,11 +33,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authNotice, setAuthNotice] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        await ensureUserProfile(firebaseUser).catch(console.error)
+    console.log('[AuthDebug] AuthProvider mounted at', new Date().toISOString())
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => {
+        console.log('[AuthDebug] auth persistence set to local')
+        return getRedirectResult(auth)
+      })
+      .then((result) => {
+        console.log('[AuthDebug] getRedirectResult resolved', {
+          hasResult: !!result,
+          uid: result?.user?.uid || null,
+          email: result?.user?.email || null,
+        })
+        if (result?.user) {
+          console.log('Google signed-in email:', result.user.email)
+        }
+      })
+      .catch((err) => {
+        console.error('[AuthDebug] auth bootstrap error', err)
+      })
 
-        if (await isAccountDisabled(firebaseUser.uid)) {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      console.log('[AuthDebug] onAuthStateChanged fired', {
+        hasUser: !!firebaseUser,
+        uid: firebaseUser?.uid || null,
+        email: firebaseUser?.email || null,
+      })
+      if (firebaseUser) {
+        console.log('[AuthDebug] ensureUserProfile start', firebaseUser.uid)
+        await ensureUserProfile(firebaseUser).catch(console.error)
+        console.log('[AuthDebug] ensureUserProfile complete', firebaseUser.uid)
+
+        console.log('[AuthDebug] getUserProfile start', firebaseUser.uid)
+        const profile = await getUserProfile(firebaseUser.uid)
+        console.log('[AuthDebug] getUserProfile complete', {
+          uid: firebaseUser.uid,
+          role: profile?.role || null,
+        })
+
+        if (profile?.role === 'disabled') {
+          console.warn('[AuthDebug] account disabled, signing out', firebaseUser.uid)
           setAuthNotice('This account has been disabled. Contact support.')
           await signOut(auth)
           setUser(null)
@@ -39,14 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        const profile = await getUserProfile(firebaseUser.uid)
         setIsSuperAdmin(isSuperAdminUser(firebaseUser.email, profile?.role))
         setUser(firebaseUser)
+        console.log('[AuthDebug] user accepted in session', {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          role: profile?.role || null,
+        })
       } else {
+        console.log('[AuthDebug] no auth user; setting logged-out state')
         setUser(null)
         setIsSuperAdmin(false)
       }
       setLoading(false)
+      console.log('[AuthDebug] loading set to false')
     })
     return unsubscribe
   }, [])
@@ -57,19 +105,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
+    console.log('[AuthDebug] email sign-in start', email)
     await signInWithEmailAndPassword(auth, email, password)
+    console.log('[AuthDebug] email sign-in success', email)
   }
 
   const signInWithGoogle = async () => {
+    console.log('[AuthDebug] google sign-in redirect start', window.location.href)
     const provider = new GoogleAuthProvider()
-    const credential = await signInWithPopup(auth, provider)
-    if (credential.user) {
-      await ensureUserProfile(credential.user)
-    }
+    await signInWithRedirect(auth, provider)
   }
 
   const handleSignOut = async () => {
+    console.log('[AuthDebug] sign out start')
     await signOut(auth)
+    console.log('[AuthDebug] sign out complete')
   }
 
   return (
