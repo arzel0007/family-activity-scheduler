@@ -2,6 +2,18 @@ import { useState } from 'react'
 import { useAuth } from '../lib/auth'
 import { useToast } from '../lib/toast'
 
+function getAuthErrorMessage(err: unknown): string {
+  const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code) : ''
+  const message =
+    typeof err === 'object' && err && 'message' in err ? String((err as { message?: string }).message) : ''
+
+  if (code === 'auth/unauthorized-domain') {
+    const host = window.location.hostname
+    return `Google sign-in is blocked for this domain (${host}). Add it in Firebase Console -> Authentication -> Settings -> Authorized domains.`
+  }
+  return message || 'Authentication failed'
+}
+
 export function LoginPage() {
   const { signIn, signUp, signInWithGoogle, authNotice, clearAuthNotice } = useAuth()
   const { addToast } = useToast()
@@ -22,8 +34,8 @@ export function LoginPage() {
         await signIn(email, password)
         // Auth state will update via onAuthStateChanged, triggering redirect
       }
-    } catch (err: any) {
-      addToast({ message: err.message || 'Authentication failed', type: 'error' })
+    } catch (err: unknown) {
+      addToast({ message: getAuthErrorMessage(err), type: 'error' })
       setLoading(false)
     }
   }
@@ -87,8 +99,8 @@ export function LoginPage() {
             setLoading(true)
             try {
               await signInWithGoogle()
-            } catch (err: any) {
-              addToast({ message: err.message || 'Google sign-in failed', type: 'error' })
+            } catch (err: unknown) {
+              addToast({ message: getAuthErrorMessage(err), type: 'error' })
               setLoading(false)
             }
           }}
