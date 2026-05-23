@@ -49,7 +49,7 @@ export function Header({ onAddActivity, onExport, onImport, onSearch }: HeaderPr
                 </span>
               )}
             </h1>
-            <p className="text-sm text-graphite-grey mt-2 max-w-2xl">
+            <p className="hidden sm:block text-sm text-graphite-grey mt-2 max-w-2xl">
               Keep your family on track with shared activities, reminders, and parent coordination.
             </p>
           </div>
@@ -68,9 +68,6 @@ export function Header({ onAddActivity, onExport, onImport, onSearch }: HeaderPr
             </button>
             <button onClick={onAddActivity} className="btn-primary" title="Add Activity (Cmd+K)">
               + Activity
-            </button>
-            <button onClick={onExport} className="btn-secondary" title="Add to calendar (Cmd+E)">
-              📅 Add to Calendar
             </button>
           </div>
         </div>

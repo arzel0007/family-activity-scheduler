@@ -231,3 +231,36 @@ If you're working with a developer, use these specific prompts:
 "Implement Framer Motion or CSS transitions for: card hover lift (transform: translateY(-2px)), button press scale, fade-in animations"
 "Set up Zustand or Recoil for state management to persist user preferences (sort order, view type, filters)"
 "Add Firebase or Supabase for real-time collaboration: when one family member adds an activity, others see it instantly"
+
+
+
+05-23-2026:
+ 1. Activity todos (flip card + persistence)
+
+ - Add todos: extend Activity type with todos: {id,title,done}[].
+ - UI: flip animation on card click/edit (CSS 3D flip or Framer Motion). Show editable list, add/remove, reorder.
+ - Persistence: update Firestore activity doc on change (merge), keep optimistic UI + toast.
+ - Files: src/lib/types.ts, src/components/ActivitiesList.tsx (card UI + handlers), src/lib/activityHistory.ts (optional).
+
+ 2. Date/time formatting
+
+ - Use Intl.DateTimeFormat or date-fns. Format: "MMM-d | h:mm a" (e.g., May-23 | 9:00 PM).
+ - Replace all raw date displays (ActivitiesList, Activity detail, calendar exports).
+ - Files: src/lib/ics.ts, src/components/ActivitiesList.tsx, any other date renderers.
+
+ 3. Microinteraction animations
+
+ - Use Tailwind transitions for buttons + Framer Motion for richer microinteractions (press, ripple, hover).
+ - Add consistent classes and a small MotionButton wrapper component.
+ - Files: src/components/* (buttons), src/index.css (tweaks).
+
+ 4. Admin CRUD surface
+
+ - Expand AdminPanel with CRUD endpoints for kids, users, activities (already mostly present).
+ - Add confirmation modals, pagination, server-side filtering, and role management.
+ - Files: src/components/AdminPanel.tsx, src/lib/adminData.ts, update SUPABASE_SETUP.sql if needed.
+
+Suggested next step (pick one):
+
+ - Implement (1) Activity todos with flip & persistence (recommended first).
+ - Or implement (2) Date/time formatting across app (quick win).
