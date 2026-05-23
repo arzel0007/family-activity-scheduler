@@ -139,6 +139,24 @@
     transform: translateY(-1px);
   }
 
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-ghost:active,
+  .btn-outline:active {
+    transform: scale(0.98);
+  }
+
+  .btn-outline {
+    @apply px-3 py-2.5 rounded font-medium text-charcoal-black bg-white border border-graphite-grey;
+    @apply hover:bg-surface-white hover:border-charcoal-black transition duration-200 ease-out;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+
   .btn-ghost {
     @apply px-3 py-2.5 md:py-1 rounded font-medium text-ink-black bg-transparent;
     @apply hover:bg-warm-gray-tint transition duration-200 ease-out;

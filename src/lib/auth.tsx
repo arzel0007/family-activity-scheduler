@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User } from 'firebase/auth'
+import { User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from './firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { ensureUserProfile, getUserProfile, isAccountDisabled } from './userProfile'
@@ -13,6 +13,7 @@ interface AuthContextType {
   clearAuthNotice: () => void
   signUp: (email: string, password: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -59,6 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithEmailAndPassword(auth, email, password)
   }
 
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider()
+    const credential = await signInWithPopup(auth, provider)
+    if (credential.user) {
+      await ensureUserProfile(credential.user)
+    }
+  }
+
   const handleSignOut = async () => {
     await signOut(auth)
   }
@@ -73,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearAuthNotice: () => setAuthNotice(null),
         signUp,
         signIn,
+        signInWithGoogle,
         signOut: handleSignOut,
       }}
     >

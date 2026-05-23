@@ -7,7 +7,7 @@ import { Avatar } from './Avatar'
 import { EmptyState } from './EmptyState'
 import { SkeletonLoader } from './SkeletonLoader'
 import { useToast } from '../lib/toast'
-import type { Activity, Kid, Invitee } from '../lib/types'
+import type { Activity, ActivityType, Kid, Invitee } from '../lib/types'
 
 interface Tag {
   id: string
@@ -70,6 +70,7 @@ export function ActivitiesList({
     location: '',
     dueDate: '',
     dueTime: '',
+    activityType: 'other' as ActivityType,
   })
 
   const isOwned = useCallback(
@@ -258,6 +259,7 @@ export function ActivitiesList({
       location: activity.location || '',
       dueDate: activity.dueDate || '',
       dueTime: activity.dueTime || '',
+      activityType: activity.activityType || 'other',
     })
     setSelectedKids(activity.kidIds || [])
     setSelectedTags(activity.tagIds || [])
@@ -285,7 +287,14 @@ export function ActivitiesList({
   }
 
   function resetForm() {
-    setFormData({ title: '', description: '', location: '', dueDate: '', dueTime: '' })
+    setFormData({
+      title: '',
+      description: '',
+      location: '',
+      dueDate: '',
+      dueTime: '',
+      activityType: 'other',
+    })
     setSelectedKids([])
     setSelectedTags([])
     setEditingId(null)

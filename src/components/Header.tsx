@@ -7,10 +7,11 @@ import { UserMenu } from './UserMenu'
 interface HeaderProps {
   onAddActivity: () => void
   onExport: () => void
+  onImport: (file: File) => void
   onSearch: () => void
 }
 
-export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
+export function Header({ onAddActivity, onExport, onImport, onSearch }: HeaderProps) {
   const { user, isSuperAdmin } = useAuth()
   const [displayName, setDisplayName] = useState('')
   const [photoURL, setPhotoURL] = useState<string | undefined>()
@@ -60,6 +61,7 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
                 if (url) setPhotoURL(url)
                 if (name) setDisplayName(name)
               }}
+              onImport={onImport}
             />
             <button onClick={onSearch} className="btn-secondary" title="Search (Cmd+F)">
               🔍

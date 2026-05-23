@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { useAuth } from '../lib/auth'
 import { Avatar } from './Avatar'
 import { ParentProfileModal } from './ParentProfileModal'
@@ -7,14 +7,16 @@ interface UserMenuProps {
   displayName: string
   photoURL?: string
   onProfileUpdate?: (photoURL?: string, displayName?: string) => void
+  onImport?: (file: File) => void
 }
 
-export function UserMenu({ displayName, photoURL, onProfileUpdate }: UserMenuProps) {
+export function UserMenu({ displayName, photoURL, onProfileUpdate, onImport }: UserMenuProps) {
   const { signOut, isSuperAdmin } = useAuth()
   const [open, setOpen] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -47,9 +49,28 @@ export function UserMenu({ displayName, photoURL, onProfileUpdate }: UserMenuPro
     }
   }
 
+  function handleImportClick() {
+    setOpen(false)
+    inputRef.current?.click()
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    onImport?.(file)
+    event.target.value = ''
+  }
+
   return (
     <>
       <div className="relative" ref={menuRef}>
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileChange}
+          className="hidden"
+        />
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -90,6 +111,16 @@ export function UserMenu({ displayName, photoURL, onProfileUpdate }: UserMenuPro
             >
               Profile & photo
             </button>
+            {onImport && (
+              <button
+                type="button"
+                role="menuitem"
+                className="w-full text-left px-3 py-2 text-sm text-charcoal-black hover:bg-warm-gray-tint transition-colors"
+                onClick={handleImportClick}
+              >
+                📥 Import data
+              </button>
+            )}
             <button
               type="button"
               role="menuitem"

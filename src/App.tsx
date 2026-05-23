@@ -91,11 +91,12 @@ function App() {
       <Header
         onAddActivity={() => setShowRecurring(true)}
         onExport={handleExport}
+        onImport={handleImport}
         onSearch={() => setShowSearch(true)}
       />
 
       <main className="max-w-[958px] mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8 gap-4">
+        <div className="mb-8">
           <div className="ph-tabs flex-1">
             <button
               onClick={() => setActiveTab('kids')}
@@ -118,15 +119,6 @@ function App() {
               </button>
             )}
           </div>
-          <label className="ml-4">
-            <input
-              type="file"
-              accept=".json"
-              onChange={(e) => e.target.files?.[0] && handleImport(e.target.files[0])}
-              className="hidden"
-            />
-            <span className="btn-secondary cursor-pointer">📥 Import</span>
-          </label>
         </div>
 
         {activeTab === 'kids' && <KidsList />}

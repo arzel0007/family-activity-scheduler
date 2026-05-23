@@ -33,6 +33,8 @@ export interface Kid {
   userId?: string
 }
 
+export type ActivityType = 'sports' | 'education' | 'celebration' | 'family' | 'other'
+
 export interface Activity {
   id: string
   title: string
@@ -40,6 +42,7 @@ export interface Activity {
   location?: string
   dueDate?: string
   dueTime?: string
+  activityType?: ActivityType
   kidIds: string[]
   tagIds: string[]
   notes: { id: string; content: string }[]
