@@ -5,7 +5,7 @@ import { getStorage } from 'firebase/storage'
 
 export const firebaseConfig = {
   apiKey: 'AIzaSyDYUIRHyvdLtbQK0GuL4pUEz1FHLD3LrBw',
-  authDomain: 'family-activity-scheduler.firebaseapp.com',
+  authDomain: 'family-activity-scheduler.web.app',
   projectId: 'family-activity-scheduler',
   storageBucket: 'family-activity-scheduler.firebasestorage.app',
   messagingSenderId: '341186563702',
