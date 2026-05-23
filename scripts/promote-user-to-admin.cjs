@@ -8,7 +8,7 @@ Usage:
   node scripts/promote-user-to-admin.cjs [--dry-run|-n] user@example.com
 
 Options:
-  --dry-run, -n    Print matched user document without writing changes
+  --dry-run, -n    Print matched user documents without writing changes
 */
 
 const admin = require('firebase-admin')
@@ -45,23 +45,26 @@ async function main() {
     const snapshot = await usersRef.where('email', '==', normalized).get()
 
     if (snapshot.empty) {
-      console.error(`No user profile found for email: ${normalized}`)
+      console.error(`No user profiles found for email: ${normalized}`)
       process.exit(2)
     }
 
-    const docSnap = snapshot.docs[0]
-    const docData = docSnap.data()
-
     if (dryRun) {
-      console.log('Dry-run: matched user document:')
-      console.log('docId:', docSnap.id)
-      console.log(JSON.stringify(docData, null, 2))
+      console.log(`Dry-run: found ${snapshot.size} user doc(s) for ${normalized}`)
+      snapshot.docs.forEach((d) => {
+        console.log('---')
+        console.log('docId:', d.id)
+        console.log(JSON.stringify(d.data(), null, 2))
+      })
       process.exit(0)
     }
 
-    await docSnap.ref.set({ role: 'super_admin', updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true })
+    // Update all matched documents
+    for (const d of snapshot.docs) {
+      await d.ref.set({ role: 'super_admin', updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true })
+      console.log(`Promoted ${normalized} to super_admin (doc id: ${d.id})`)
+    }
 
-    console.log(`Promoted ${normalized} to super_admin (doc id: ${docSnap.id})`)
     process.exit(0)
   } catch (err) {
     console.error('Error promoting user:', err)

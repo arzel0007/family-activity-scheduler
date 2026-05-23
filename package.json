@@ -11,7 +11,8 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright show-report",
-    "promote:admin": "node scripts/promote-user-to-admin.cjs"
+    "promote:admin": "node scripts/promote-user-to-admin.cjs",
+    "merge:users": "node scripts/merge-user-docs.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.0",
