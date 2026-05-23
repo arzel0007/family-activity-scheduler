@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { User, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth'
+import { User, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from './firebase'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { ensureUserProfile, getUserProfile, isAccountDisabled } from './userProfile'
@@ -62,18 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
-    const isLocalHost =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-
-    if (isLocalHost) {
-      const credential = await signInWithPopup(auth, provider)
-      if (credential.user) {
-        await ensureUserProfile(credential.user)
-      }
-      return
+    const credential = await signInWithPopup(auth, provider)
+    if (credential.user) {
+      await ensureUserProfile(credential.user)
     }
-
-    await signInWithRedirect(auth, provider)
   }
 
   const handleSignOut = async () => {
