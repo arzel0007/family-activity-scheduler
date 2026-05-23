@@ -48,8 +48,11 @@ export function Header({ onAddActivity, onExport, onSearch }: HeaderProps) {
                 </span>
               )}
             </h1>
+            <p className="text-sm text-graphite-grey mt-2 max-w-2xl">
+              Keep your family on track with shared activities, reminders, and parent coordination.
+            </p>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap justify-end gap-2 items-center">
             <UserMenu
               displayName={profileName}
               photoURL={photoURL}

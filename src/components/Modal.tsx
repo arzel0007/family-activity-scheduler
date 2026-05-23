@@ -14,13 +14,13 @@ export function Modal({ isOpen, title, children, onClose, actions }: ModalProps)
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-charcoal-black/20 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-surface-white p-6 md:p-8 rounded border border-pale-granite max-w-lg w-full mx-auto"
+        className="bg-surface-white p-6 md:p-8 rounded border border-pale-granite max-w-lg w-full mx-auto animate-fade-up"
         style={{ boxShadow: 'var(--shadow-xl)' }}
       >
         <h2 className="text-xl font-bold mb-4 text-charcoal-black">{title}</h2>
         <div className="mb-6">{children}</div>
         {actions && (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {actions.map((action, idx) => (
               <button
                 key={idx}

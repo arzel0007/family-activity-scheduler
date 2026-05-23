@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc
 import { generateICS, downloadICS } from '../lib/ics'
 import { Modal } from './Modal'
 import { Avatar } from './Avatar'
+import { EmptyState } from './EmptyState'
 import { SkeletonLoader } from './SkeletonLoader'
 import { useToast } from '../lib/toast'
 import type { Activity, Kid, Invitee } from '../lib/types'
@@ -295,12 +296,22 @@ export function ActivitiesList({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <h2 className="text-2xl font-bold text-charcoal-black">Activities</h2>
-        <div className="space-x-2 flex flex-wrap">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-bold text-charcoal-black">Activities</h2>
+            <span className="inline-flex items-center rounded-full bg-warm-gray-tint px-3 py-1 text-sm text-charcoal-black">
+              {activities.length} {activities.length === 1 ? 'activity' : 'activities'}
+            </span>
+          </div>
+          <p className="text-sm text-graphite-grey mt-2 max-w-2xl">
+            Create shared family activities, track notes, and keep your household on the same page.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           {ownedActivities.length > 0 && (
-            <button onClick={handleExport} className="btn-primary text-sm px-3 py-2">
-              Export
+            <button onClick={handleExport} className="btn-secondary text-sm px-3 py-2">
+              📅 Export
             </button>
           )}
           <button
@@ -310,7 +321,7 @@ export function ActivitiesList({
             }}
             className="btn-primary text-sm px-3 py-2"
           >
-            {showForm ? 'Cancel' : 'Add'}
+            {showForm ? 'Cancel' : '+ Add activity'}
           </button>
         </div>
       </div>
@@ -325,18 +336,30 @@ export function ActivitiesList({
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-canvas-sand"
+          className="space-y-6 bg-surface-white border border-pale-granite shadow-sm rounded-3xl p-6"
         >
-          <div>
-            <label className="label">Activity Title</label>
-            <input
-              type="text"
-              placeholder="Enter activity title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="input"
-              required
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">Activity Title</label>
+              <input
+                type="text"
+                placeholder="Enter activity title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+            <div>
+              <label className="label">Location</label>
+              <input
+                type="text"
+                placeholder="e.g. Lincoln Elementary, 123 Main St"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="input"
+              />
+            </div>
           </div>
           <div>
             <label className="label">Description</label>
@@ -345,20 +368,10 @@ export function ActivitiesList({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="input"
-              rows={3}
+              rows={4}
             />
           </div>
-          <div>
-            <label className="label">Location</label>
-            <input
-              type="text"
-              placeholder="e.g. Lincoln Elementary, 123 Main St"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="input"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">Due Date</label>
               <input
@@ -378,50 +391,52 @@ export function ActivitiesList({
               />
             </div>
           </div>
-          <div>
-            <label className="label">Select Kids</label>
-            <div className="space-y-2">
-              {kids.map((kid) => (
-                <label key={kid.id} className="flex items-center cursor-pointer gap-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedKids.includes(kid.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedKids([...selectedKids, kid.id])
-                      } else {
-                        setSelectedKids(selectedKids.filter((id) => id !== kid.id))
-                      }
-                    }}
-                    className="w-4 h-4"
-                  />
-                  <Avatar name={kid.name} photoURL={kid.photoURL} size="sm" />
-                  <span className="text-charcoal-black">{kid.name}</span>
-                </label>
-              ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">Select Kids</label>
+              <div className="space-y-2">
+                {kids.map((kid) => (
+                  <label key={kid.id} className="flex items-center gap-2 cursor-pointer rounded-xl border border-pale-granite p-3 transition-colors hover:bg-canvas-sand">
+                    <input
+                      type="checkbox"
+                      checked={selectedKids.includes(kid.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedKids([...selectedKids, kid.id])
+                        } else {
+                          setSelectedKids(selectedKids.filter((id) => id !== kid.id))
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <Avatar name={kid.name} photoURL={kid.photoURL} size="sm" />
+                    <span className="text-charcoal-black">{kid.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="label">Tags</label>
-            <div className="space-y-2">
-              {tags.map((tag) => (
-                <label key={tag.id} className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedTags.includes(tag.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedTags([...selectedTags, tag.id])
-                      } else {
-                        setSelectedTags(selectedTags.filter((id) => id !== tag.id))
-                      }
-                    }}
-                    className="mr-2 w-4 h-4"
-                  />
-                  <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: tag.color }} />
-                  <span className="text-charcoal-black">{tag.name}</span>
-                </label>
-              ))}
+            <div>
+              <label className="label">Tags</label>
+              <div className="space-y-2">
+                {tags.map((tag) => (
+                  <label key={tag.id} className="flex items-center gap-2 cursor-pointer rounded-xl border border-pale-granite p-3 transition-colors hover:bg-canvas-sand">
+                    <input
+                      type="checkbox"
+                      checked={selectedTags.includes(tag.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedTags([...selectedTags, tag.id])
+                        } else {
+                          setSelectedTags(selectedTags.filter((id) => id !== tag.id))
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tag.color }} />
+                    <span className="text-charcoal-black">{tag.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <button
@@ -429,7 +444,7 @@ export function ActivitiesList({
             disabled={submitting}
             className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Saving...' : editingId ? 'Update' : 'Add'}
+            {submitting ? 'Saving...' : editingId ? 'Update activity' : 'Add activity'}
           </button>
         </form>
       )}
@@ -441,92 +456,79 @@ export function ActivitiesList({
           const invitees = (activity.invitees || []) as Invitee[]
 
           return (
-            <div key={activity.id} className="card p-4">
-              <div className="flex justify-between items-start mb-3 gap-2">
+            <div key={activity.id} className="card p-5 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-lg text-charcoal-black">
-                      {activity.title}
-                    </h3>
-                    {activity.shared && (
-                      <span className="ph-badge-shared">Shared with you</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-lg text-charcoal-black">{activity.title}</h3>
+                    {activity.shared && <span className="ph-badge-shared">Shared</span>}
+                    {invitees.length > 0 && (
+                      <span className="ph-badge-invitee">{invitees.length} invitee{invitees.length === 1 ? '' : 's'}</span>
                     )}
                   </div>
                   {activity.description && (
-                    <p className="text-sm text-graphite-grey">{activity.description}</p>
+                    <p className="text-sm text-graphite-grey mt-2">{activity.description}</p>
                   )}
-                  {activity.location && (
-                    <p className="text-sm text-graphite-grey mt-1">📍 {activity.location}</p>
-                  )}
-                </div>
-                {owned && (
-                  <div className="space-x-2 flex shrink-0">
-                    <button onClick={() => handleEdit(activity)} className="btn-secondary text-sm">
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setDeleteActivityId(activity.id)}
-                      className="btn-secondary text-sm"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => handleExportActivity(activity)}
-                      className="btn-secondary text-sm"
-                      title="Add to calendar"
-                    >
-                      📅
-                    </button>
+                  <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                    {activity.location && (
+                      <span className="rounded-full bg-pale-granite px-3 py-1 text-graphite-grey">📍 {activity.location}</span>
+                    )}
+                    {(activity.dueDate || activity.dueTime) && (
+                      <span className="rounded-full bg-warm-gray-tint px-3 py-1 text-charcoal-black">
+                        {activity.dueDate || 'No date'}{activity.dueTime ? ` • ${activity.dueTime}` : ''}
+                      </span>
+                    )}
                   </div>
-                )}
-                {!owned && (
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {owned && (
+                    <>
+                      <button onClick={() => handleEdit(activity)} className="btn-secondary text-sm">
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteActivityId(activity.id)}
+                        className="btn-secondary text-sm"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={() => handleExportActivity(activity)}
-                    className="btn-secondary text-sm shrink-0"
+                    className="btn-secondary text-sm"
                     title="Add to calendar"
                   >
                     📅
                   </button>
-                )}
+                </div>
               </div>
-              <div className="text-sm text-graphite-grey mb-2">
-                {activity.dueDate && <span>{activity.dueDate}</span>}
-                {activity.dueTime && <span> at {activity.dueTime}</span>}
-              </div>
-              <div className="mt-2 text-sm mb-2">
-                <span className="font-medium text-charcoal-black">Kids: </span>
+
+              <div className="mt-4 text-sm mb-4">
+                <span className="font-medium text-charcoal-black">Kids:</span>
                 {kidDisplay.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {kidDisplay.map((kid) => (
-                      <div key={kid.id} className="flex items-center gap-1.5">
+                      <div key={kid.id} className="flex items-center gap-2 rounded-full bg-canvas-sand px-3 py-2">
                         <Avatar name={kid.name} photoURL={kid.photoURL} size="sm" />
                         <span className="text-graphite-grey">{kid.name}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <span className="text-graphite-grey">No kids assigned</span>
+                  <span className="text-graphite-grey ml-2">No kids assigned</span>
                 )}
               </div>
-              {invitees.length > 0 && (
-                <div className="text-sm mb-2">
-                  <span className="font-medium text-charcoal-black">
-                    Invitees:{' '}
-                  </span>
-                  <span className="text-graphite-grey">
-                    {invitees.map((i) => i.email || i.displayName || i.userId).join(', ')}
-                  </span>
-                </div>
-              )}
+
               {activity.tagIds?.length > 0 && (
-                <div className="flex gap-2 mb-2 flex-wrap">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {activity.tagIds.map((tagId) => {
                     const tag = tags.find((t) => t.id === tagId)
                     return tag ? (
                       <span
                         key={tag.id}
-                        className="px-2 py-1 rounded text-xs text-ink-black"
-                        style={{ backgroundColor: tag.color }}
+                        className="px-3 py-1 rounded-full text-xs font-medium"
+                        style={{ backgroundColor: tag.color, color: '#111827' }}
                       >
                         {tag.name}
                       </span>
@@ -534,6 +536,7 @@ export function ActivitiesList({
                   })}
                 </div>
               )}
+
               <button
                 onClick={() =>
                   setExpandedActivity(expandedActivity === activity.id ? null : activity.id)
@@ -543,34 +546,33 @@ export function ActivitiesList({
                 {expandedActivity === activity.id ? 'Hide' : 'Show'} Notes ({activity.notes?.length || 0})
               </button>
               {expandedActivity === activity.id && (
-                <div className="mt-3 space-y-2 border-t border-pale-granite">
+                <div className="mt-4 space-y-3 border-t border-pale-granite pt-4">
                   {(activity.notes || []).map((note) => (
-                    <div
-                      key={note.id}
-                      className="bg-canvas-sand"
-                    >
-                      <p className="text-sm text-charcoal-black">{note.content}</p>
-                      {owned && (
-                        <button
-                          onClick={() => handleDeleteNote(activity.id, note.id)}
-                          className="text-sunset-orange text-xs hover:underline"
-                        >
-                          Delete
-                        </button>
-                      )}
+                    <div key={note.id} className="rounded-2xl bg-canvas-sand p-3">
+                      <div className="flex justify-between gap-3">
+                        <p className="text-sm text-charcoal-black">{note.content}</p>
+                        {owned && (
+                          <button
+                            onClick={() => handleDeleteNote(activity.id, note.id)}
+                            className="text-sunset-orange text-xs hover:underline"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   {owned && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                       <input
                         type="text"
                         placeholder="Add a note..."
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
-                        className="flex-1 px-2 py-1 border border-graphite-grey rounded text-sm bg-surface-white"
+                        className="flex-1 px-3 py-2 border border-graphite-grey rounded-2xl text-sm bg-surface-white"
                       />
-                      <button onClick={() => handleAddNote(activity.id)} className="btn-primary text-sm">
-                        Add
+                      <button onClick={() => handleAddNote(activity.id)} className="btn-primary text-sm px-4 py-2">
+                        Add note
                       </button>
                     </div>
                   )}
@@ -581,11 +583,14 @@ export function ActivitiesList({
         })}
       </div>
 
-      {activities.length === 0 && !showForm && (
-        <p className="text-graphite-grey text-center py-8">
-          No activities yet. Click &quot;Add&quot; to get started!
-        </p>
-      )}
+      {activities.length === 0 && !showForm ? (
+        <EmptyState
+          icon="🗓️"
+          title="No activities yet"
+          description="Add your first family activity to start building your weekly schedule and keep everyone in sync."
+          action={{ label: 'Create activity', onClick: () => setShowForm(true) }}
+        />
+      ) : null}
 
       <Modal
         isOpen={!!deleteActivityId}

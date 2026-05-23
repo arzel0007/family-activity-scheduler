@@ -103,24 +103,30 @@
   /* Enhanced buttons with touch-friendly sizing */
   .btn-primary {
     @apply px-4 py-3 md:py-2.5 rounded font-medium text-ink-black bg-marigold-yellow border border-marigold-yellow;
-    @apply hover:bg-sunset-orange hover:border-sunset-orange transition-colors;
-    /* Ensure minimum touch target size of 48x48 */
+    @apply hover:bg-sunset-orange hover:border-sunset-orange transition duration-200 ease-out transform;
     min-height: 48px;
     min-width: 48px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* Prevent text selection on double tap */
     -webkit-user-select: none;
     user-select: none;
-    /* Better tap feedback */
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
     cursor: pointer;
+    box-shadow: 0 10px 20px rgba(241, 168, 44, 0.12);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
   }
 
   .btn-secondary {
     @apply px-3 py-2.5 md:py-1 rounded font-medium text-ink-black bg-transparent border border-graphite-grey;
-    @apply hover:bg-pale-granite transition-colors;
+    @apply hover:bg-pale-granite transition duration-200 ease-out;
     min-height: 44px;
     display: inline-flex;
     align-items: center;
@@ -129,9 +135,13 @@
     cursor: pointer;
   }
 
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+  }
+
   .btn-ghost {
     @apply px-3 py-2.5 md:py-1 rounded font-medium text-ink-black bg-transparent;
-    @apply hover:bg-warm-gray-tint transition-colors;
+    @apply hover:bg-warm-gray-tint transition duration-200 ease-out;
     min-height: 44px;
     display: inline-flex;
     align-items: center;
@@ -142,7 +152,13 @@
 
   .card {
     @apply bg-surface-white rounded border border-pale-granite;
-    box-shadow: none;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
   }
 
   /* Enhanced form inputs with better mobile support */
@@ -242,11 +258,11 @@
 
   /* Empty state styling */
   .empty-state {
-    @apply flex flex-col items-center justify-center py-12 px-6 text-center;
+    @apply flex flex-col items-center justify-center py-12 px-6 text-center rounded-3xl border border-pale-granite bg-surface-white shadow-sm;
   }
 
   .empty-state-icon {
-    @apply text-5xl mb-4 opacity-50;
+    @apply text-5xl mb-4 opacity-70;
   }
 
   .empty-state-title {
@@ -255,6 +271,21 @@
 
   .empty-state-text {
     @apply text-graphite-grey mb-6 max-w-sm;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 260ms ease-out;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   /* Responsive grid for card layouts */
