@@ -113,7 +113,7 @@ export function LoginPage() {
             <path d="M4.32 13.57c-.3-.9-.47-1.85-.47-2.82 0-.98.17-1.92.47-2.82V4.38H.68A11.97 11.97 0 0 0 0 10.75c0 1.92.46 3.74 1.28 5.35l3.04-2.53Z" fill="#FBBC05" />
             <path d="M12 4.5c1.66 0 3.15.57 4.33 1.69l3.24-3.24C16.46 1 14.44 0 12 0 6.64 0 2.15 2.2.68 5.38l3.63 2.82C5.4 6.9 8.43 4.5 12 4.5Z" fill="#EA4335" />
           </svg>
-          {loading ? 'Please wait…' : 'Continue with Google'}
+          {loading ? 'Please wait…' : isSignUp ? 'Sign up using Google' : 'Sign in using Google'}
         </button>
 
         <div className="mt-6 text-center">
