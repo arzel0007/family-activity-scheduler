@@ -104,6 +104,25 @@ All tables have Row Level Security (RLS) enabled for data privacy.
 - **PWA**: vite-plugin-pwa
 - **Deployment**: Vercel (recommended)
 
+## Running E2E tests
+
+To run Playwright E2E tests locally:
+
+```bash
+npx playwright test
+```
+
+To run a specific test file:
+
+```bash
+npx playwright test e2e/home.spec.ts
+```
+
+### Debugging tips
+- Use `npx playwright test --debug` to launch the Playwright inspector.
+- Add `test.only(...)` to focus on a single test.
+- Use `console.log` in your tests for debugging output.
+
 ## License
 
 MIT

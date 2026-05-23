@@ -1,0 +1,42 @@
+name: Playwright E2E
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: |
+          cd testProject
+          npm ci
+      - name: Install Playwright browsers
+        run: |
+          cd testProject
+          npx playwright install --with-deps
+      - name: Build and start preview
+        run: |
+          cd testProject
+          npm run build
+          nohup npm run preview -- --port=4173 &
+          # wait for server to be ready
+          n=0; until curl -sSf http://127.0.0.1:4173 || [ $n -ge 15 ]; do n=$((n+1)); sleep 1; done
+      - name: Run Playwright tests
+        run: |
+          cd testProject
+          npx playwright test --config=playwright.config.ts
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: testProject/playwright-report
