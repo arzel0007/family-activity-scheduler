@@ -41,3 +41,16 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_FAMILY_ACTIVITY_SCHEDULER }}
           channelId: live
           projectId: family-activity-scheduler
+
+      - name: Smoke check (verify live site)
+        run: |
+          echo "Waiting for propagation..."
+          sleep 5
+          for url in "https://family-activity-scheduler.web.app" "https://family-activity-scheduler.firebaseapp.com"; do
+            echo "Checking $url"
+            if ! curl -sSfL "$url" -o /dev/null; then
+              echo "Smoke check failed for $url"
+              exit 1
+            fi
+          done
+          echo "Smoke check passed for live site."
