@@ -123,6 +123,39 @@ npx playwright test e2e/home.spec.ts
 - Add `test.only(...)` to focus on a single test.
 - Use `console.log` in your tests for debugging output.
 
+## Deployment (Firebase Hosting)
+
+This project includes CI workflows to deploy the `testProject` PWA to Firebase Hosting. The workflows expect certain GitHub repository secrets to be configured so the build has access to runtime configuration and the Firebase service account.
+
+Required GitHub secrets (set in repository Settings → Secrets → Actions):
+- FIREBASE_SERVICE_ACCOUNT_FAMILY_ACTIVITY_SCHEDULER — JSON service account used by the Firebase Hosting Action
+- VITE_SUPABASE_URL — Supabase project URL (Vite env)
+- VITE_SUPABASE_ANON_KEY — Supabase anon/public key (Vite env)
+- VITE_FCM_VAPID_KEY — (optional) FCM VAPID key for push notifications
+- VITE_FIREBASE_STORAGE — (optional) 'true' or 'false' for profile photo storage in Firebase
+- VITE_SUPER_ADMIN_EMAIL — (optional) email treated as super-admin client-side
+
+How the workflows work
+- Pull requests: `testProject/.github/workflows/firebase-hosting-pull-request.yml` builds and deploys a preview channel using the provided Firebase service account.
+- Merge to main: `testProject/.github/workflows/firebase-hosting-merge.yml` builds and deploys to the live channel.
+
+Notes and recommendations
+- The CI injects Vite env vars at build time by writing `.env.production` inside `testProject/` before running `npm run build`. Ensure the required secrets are present.
+- Create a Firebase service account with at least the **Firebase Hosting Admin** role and add the JSON as `FIREBASE_SERVICE_ACCOUNT_FAMILY_ACTIVITY_SCHEDULER`.
+- Keep service account keys out of the repository and rotate/revoke them regularly.
+- To manually deploy from local machine, use Firebase CLI:
+
+```bash
+# login and target your project
+firebase login
+firebase use --add
+# build and deploy
+cd testProject
+npm ci
+npm run build
+firebase deploy --only hosting
+```
+
 ## License
 
 MIT

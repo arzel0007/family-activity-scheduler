@@ -328,7 +328,7 @@ export function ActivitiesList({
               if (showForm) resetForm()
               else setShowForm(true)
             }}
-            className="btn-primary text-sm px-3 py-2"
+            className="btn-primary text-sm px-3 py-2 hidden sm:inline-flex"
           >
             {showForm ? 'Cancel' : '+ Add activity'}
           </button>
@@ -458,7 +458,7 @@ export function ActivitiesList({
         </form>
       )}
 
-      <div className="grid gap-4">
+      <div className="card-grid">
         {activities.map((activity) => {
           const owned = isOwned(activity)
           const kidDisplay = getKidDisplay(activity, kids)
@@ -601,11 +601,19 @@ export function ActivitiesList({
         />
       ) : null}
 
-      <Modal
+        {/* Mobile FAB for quick add */}
+        <button
+          onClick={() => setShowForm(true)}
+          className="fab btn-primary md:hidden"
+          aria-label="Add activity"
+        >
+          +
+        </button>
+        <Modal
         isOpen={!!deleteActivityId}
         title="Delete Activity"
         onClose={() => !deleting && setDeleteActivityId(null)}
-        actions={[
+        actions={[ 
           {
             label: deleting ? 'Deleting...' : 'Delete',
             onClick: () => deleteActivityId && handleDelete(deleteActivityId),

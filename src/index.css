@@ -362,6 +362,13 @@
       padding-right: 16px;
     }
   }
+
+  /* Floating action button for mobile */
+  .fab {
+    @apply fixed bottom-6 right-4 rounded-full w-14 h-14 flex items-center justify-center text-xl;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+    z-index: 60;
+  }
 }
 
 /* Dark mode support */
